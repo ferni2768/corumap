@@ -1,0 +1,29 @@
+:root {
+    --pixel-ratio: 10;
+}
+
+*,
+canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: pixelated;
+}
+
+html,
+body {
+    overflow: hidden;
+}
+
+/* Android-specific styles */
+.android-device {
+    overflow: hidden !important;
+}
+
+.android-device body {
+    width: calc(var(--pixel-ratio, 4) * 100vw) !important;
+    height: calc(var(--pixel-ratio, 4) * 100vh) !important;
+    transform: scale(calc(1 / var(--pixel-ratio, 4))) !important;
+    transform-origin: top left !important;
+}
