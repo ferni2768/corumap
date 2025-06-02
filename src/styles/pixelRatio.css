@@ -1,5 +1,5 @@
 :root {
-    --pixel-ratio: 10;
+    --pixel-ratio: 3;
 }
 
 *,
@@ -14,16 +14,4 @@ canvas {
 html,
 body {
     overflow: hidden;
-}
-
-/* Android-specific styles */
-.android-device {
-    overflow: hidden !important;
-}
-
-.android-device body {
-    width: calc(var(--pixel-ratio, 4) * 100vw) !important;
-    height: calc(var(--pixel-ratio, 4) * 100vh) !important;
-    transform: scale(calc(1 / var(--pixel-ratio, 4))) !important;
-    transform-origin: top left !important;
 }
