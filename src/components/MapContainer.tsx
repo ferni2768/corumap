@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { PixelRatioManager } from '../utils/pixelRatio';
 import Marker from './Marker';
+import Curve from './Curve';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -246,6 +247,7 @@ const MapContainer: React.FC = () => {
                 </div>
             )}
             <div ref={mapContainer} className="map-container" />
+            <Curve map={map.current} markers={MARKERS} />
             <Marker map={map.current} markers={MARKERS} />
         </div>
     );

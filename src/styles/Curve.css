@@ -1,0 +1,30 @@
+:root {
+    --curve-thickness: 3;
+    --curve-dash-length: 8;
+    --curve-gap-length: 5;
+}
+
+.curve-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.curve-path {
+    fill: none;
+    stroke: #ff0000;
+    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1vmin);
+    stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * 1vmin);
+    stroke-linecap: round;
+    opacity: 0.8;
+    transition: opacity 0.2s ease, stroke-width 0.2s ease;
+}
+
+.curve-path:hover {
+    opacity: 1;
+    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+}

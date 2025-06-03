@@ -2,7 +2,6 @@
     --marker-size: 10;
     --marker-outline: 1;
     --marker-border: 1;
-    --marker-mobile-scale: 0.5;
 }
 
 .marker {
@@ -13,9 +12,10 @@
     cursor: default;
     width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
     height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    transition: all 0.2s ease;
+    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
     position: absolute;
     pointer-events: auto;
+    z-index: 10;
 }
 
 .marker:hover {
