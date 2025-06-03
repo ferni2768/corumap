@@ -69,6 +69,13 @@ export class PixelRatioManager {
         // Set CSS custom property
         document.documentElement.style.setProperty('--pixel-ratio', this.pixelRatio.toString());
 
+        // Set mobile scaling factor for markers
+        if (this.isMobile) {
+            document.documentElement.style.setProperty('--marker-mobile-scale', '0.33');
+        } else {
+            document.documentElement.style.setProperty('--marker-mobile-scale', '1');
+        }
+
         if (this.isMobile) {
             this.applyMobileStyles();
         } else {
