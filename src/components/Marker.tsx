@@ -11,6 +11,7 @@ interface MarkerData {
 interface MarkerProps {
     map: mapboxgl.Map | null;
     markers: MarkerData[];
+    onMarkerClick?: (markerId: number) => void;
 }
 
 interface MarkerPosition {
@@ -20,7 +21,7 @@ interface MarkerPosition {
     y: number;
 }
 
-const Marker: React.FC<MarkerProps> = ({ map, markers }) => {
+const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
     const [markerPositions, setMarkerPositions] = useState<MarkerPosition[]>([]);
 
     const updateMarkerPositions = () => {
@@ -53,6 +54,10 @@ const Marker: React.FC<MarkerProps> = ({ map, markers }) => {
         };
     }, [map, markers]);
 
+    const handleMarkerClick = (markerId: number) => {
+        onMarkerClick?.(markerId);
+    };
+
     if (markerPositions.length === 0) return null;
 
     return (
@@ -67,6 +72,7 @@ const Marker: React.FC<MarkerProps> = ({ map, markers }) => {
                         transform: 'translate(-50%, -50%)'
                     }}
                     title={marker.name}
+                    onClick={() => handleMarkerClick(marker.id)}
                 />
             ))}
         </>

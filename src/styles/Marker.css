@@ -9,7 +9,7 @@
     outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
     border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
     border-radius: 50%;
-    cursor: default;
+    cursor: pointer;
     width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
     height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
     transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;

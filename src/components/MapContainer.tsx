@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import { PixelRatioManager } from '../utils/pixelRatio';
 import Marker from './Marker';
 import Curve from './Curve';
+import AnimatedPath from './AnimatedPath';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -77,6 +78,7 @@ const MapContainer: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
 
     // Initialize device info
     useEffect(() => {
@@ -226,6 +228,14 @@ const MapContainer: React.FC = () => {
         return () => clearTimeout(timer);
     }, [isMobile]);
 
+    const handleMarkerClick = (markerId: number) => {
+        setTargetMarkerId(markerId);
+    };
+
+    const handleAnimationComplete = () => {
+        setTargetMarkerId(null);
+    };
+
     if (error) {
         return (
             <div className="map-container error">
@@ -248,7 +258,13 @@ const MapContainer: React.FC = () => {
             )}
             <div ref={mapContainer} className="map-container" />
             <Curve map={map.current} markers={MARKERS} />
-            <Marker map={map.current} markers={MARKERS} />
+            <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
+            <AnimatedPath
+                map={map.current}
+                markers={MARKERS}
+                targetMarkerId={targetMarkerId}
+                onAnimationComplete={handleAnimationComplete}
+            />
         </div>
     );
 };
