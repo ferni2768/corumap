@@ -1,0 +1,52 @@
+:root {
+    --card-blur-amount: 15;
+    --card-padding: 4;
+    --card-font-size: 3;
+    --card-heading-size: 15;
+    --card-text-size: 7;
+    --card-shadow-size: 2;
+}
+
+.rounded-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    z-index: 100;
+
+    /* Glassmorphism effect */
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(calc(var(--card-blur-amount) * var(--marker-mobile-scale, 1) * 1vmin));
+    -webkit-backdrop-filter: blur(calc(var(--card-blur-amount) * var(--marker-mobile-scale, 1) * 1vmin));
+
+    /* Content styling */
+    padding: calc(var(--card-padding) * var(--marker-mobile-scale, 1) * 1vmin);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--card-font-size) * var(--marker-mobile-scale, 1) * 1vmin);
+}
+
+.rounded-card .card-content {
+    text-align: center;
+    width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .rounded-card {
+        width: calc(90% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(25% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    }
+}
+
+@media (max-width: 480px) {
+    .rounded-card {
+        width: calc(95% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    }
+}

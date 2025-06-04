@@ -4,6 +4,7 @@ import { PixelRatioManager } from '../utils/pixelRatio';
 import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
+// import RoundedCard from './RoundedCard';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -265,6 +266,9 @@ const MapContainer: React.FC = () => {
                 targetMarkerId={targetMarkerId}
                 onAnimationComplete={handleAnimationComplete}
             />
+            {/* <RoundedCard>
+                <></>
+            </RoundedCard> */}
         </div>
     );
 };
