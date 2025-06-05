@@ -8,15 +8,6 @@
 }
 
 .rounded-card {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    z-index: 100;
-
     /* Glassmorphism effect */
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(calc(var(--card-blur-amount) * var(--marker-mobile-scale, 1) * 1vmin));
@@ -29,6 +20,44 @@
     align-items: center;
     justify-content: center;
     font-size: calc(var(--card-font-size) * var(--marker-mobile-scale, 1) * 1vmin);
+    pointer-events: none;
+    z-index: 100;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+/* Force Superellipse to fill container */
+.rounded-card>* {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.rounded-card-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    z-index: 9999;
+    padding: 0;
+    margin: 0;
+}
+
+.rounded-card-container.mobile-position {
+    transform: translate(-50%, 0%) scale(1);
+}
+
+.rounded-card-container.desktop-scaled {
+    transform: translate(-50%, -33%) scale(0.333);
+}
+
+.rounded-card-container.debug {
+    background: rgba(138, 43, 226, 0.3);
+    border: 2px solid rgba(138, 43, 226, 0.8);
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
 }
 
 .rounded-card .card-content {
@@ -36,17 +65,63 @@
     width: 100%;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .rounded-card {
-        width: calc(90% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(25% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+@media (max-aspect-ratio: 3/2) {
+
+    /* Portrait mode wide */
+    .rounded-card-container {
+        top: 70%;
+        left: 50%;
+        width: calc(50% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    }
+
+    .rounded-card-container.mobile-position {
+        transform: translateX(-50%) scale(1);
+    }
+
+    .rounded-card-container.desktop-scaled {
+        transform: translateX(-50%) translateY(-33%) scale(0.333);
     }
 }
 
-@media (max-width: 480px) {
-    .rounded-card {
-        width: calc(95% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+@media (max-aspect-ratio: 1/1) {
+
+    /* Portrait mode square */
+    .rounded-card-container {
+        top: 70%;
+        left: 50%;
+        width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
+
+    .rounded-card-container.mobile-position {
+        transform: translateX(-50%) scale(1);
+    }
+
+    .rounded-card-container.desktop-scaled {
+        transform: translateX(-50%) translateY(-33%) scale(0.333);
+    }
+}
+
+@media (min-aspect-ratio: 3/2) {
+
+    /* Landscape mode */
+    .rounded-card-container {
+        top: 50%;
+        left: 65%;
+        width: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(40% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    }
+
+    .rounded-card-container.mobile-position {
+        transform: translateY(-50%) scale(1);
+    }
+
+    .rounded-card-container.desktop-scaled {
+        transform: translateY(-50%) translateX(-33%) scale(0.333);
+    }
+}
+
+.rounded-card.inner-scaled {
+    transform: scale(3.075);
 }

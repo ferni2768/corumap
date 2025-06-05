@@ -4,7 +4,7 @@ import { PixelRatioManager } from '../utils/pixelRatio';
 import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
-// import RoundedCard from './RoundedCard';
+import RoundedCard from './RoundedCard';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -15,9 +15,6 @@ if (!accessToken) {
 }
 
 mapboxgl.accessToken = accessToken;
-
-// Map zoom level
-const MAP_ZOOM = 12;
 
 // Markers data
 const MARKERS = [
@@ -87,14 +84,31 @@ const MapContainer: React.FC = () => {
         setIsMobile(pixelRatioManager.isMobileDevice());
     }, []);
 
-    // Calculate bounds based on zoom level
+    // Calculate bounds based on zoom level and responsive center
     const calculateBounds = (zoom: number): [[number, number], [number, number]] => {
-        const center: [number, number] = [-8.408580, 43.375986];
+        const center = getResponsiveCenter();
         const factor = Math.pow(2, 12 - zoom) * 0.02;
         return [
             [center[0] - factor, center[1] - factor],
             [center[0] + factor, center[1] + factor]
         ];
+    };
+
+    // Get responsive center based on aspect ratio
+    const getResponsiveCenter = (): [number, number] => {
+        const aspectRatio = window.innerWidth / window.innerHeight;
+        const baseCenter: [number, number] = [-8.409610, 43.378497];
+
+        if (aspectRatio < 1.5) return [baseCenter[0], baseCenter[1] - 0.005]; // Portrait mode
+        else return [baseCenter[0] + 0.01, baseCenter[1]]; // Landscape mode
+    };
+
+    // Get responsive zoom based on aspect ratio
+    const getResponsiveZoom = (): number => {
+        const aspectRatio = window.innerWidth / window.innerHeight;
+
+        if (aspectRatio < 1.5) return 12; // Portrait mode
+        else return 12.5; // Landscape mode
     };
 
     // Get actual viewport dimensions for mobile devices
@@ -116,8 +130,9 @@ const MapContainer: React.FC = () => {
 
         const initMap = () => {
             try {
-                const center: [number, number] = [-8.409610, 43.378497];
-                const bounds = calculateBounds(MAP_ZOOM);
+                const center = getResponsiveCenter();
+                const zoom = getResponsiveZoom();
+                const bounds = calculateBounds(zoom);
 
                 // Set mobile container size before map initialization
                 if (isMobile && mapContainer.current) {
@@ -137,7 +152,7 @@ const MapContainer: React.FC = () => {
                     container: mapContainer.current!,
                     style: 'mapbox://styles/mapbox/satellite-v9',
                     center: center,
-                    zoom: MAP_ZOOM,
+                    zoom: zoom,
                     interactive: false,
                     attributionControl: true,
                     logoPosition: 'bottom-right',
@@ -187,6 +202,11 @@ const MapContainer: React.FC = () => {
                 // Handle resize events
                 const handleMapResize = () => {
                     if (map.current) {
+                        // Update center and bounds based on new aspect ratio
+                        const newCenter = getResponsiveCenter();
+                        const newZoom = getResponsiveZoom();
+                        const newBounds = calculateBounds(newZoom);
+
                         // Update container dimensions for mobile devices
                         if (isMobile && mapContainer.current) {
                             const viewport = getViewportDimensions();
@@ -202,16 +222,20 @@ const MapContainer: React.FC = () => {
                         }
 
                         map.current.resize();
-                        map.current.fitBounds(bounds, { padding: 20, animate: false });
+                        map.current.setCenter(newCenter);
+                        map.current.setZoom(newZoom);
+                        map.current.fitBounds(newBounds, { padding: 20, animate: false });
                     }
                 };
 
                 window.addEventListener('resize', handleMapResize);
+                window.addEventListener('orientationchange', handleMapResize);
                 window.addEventListener('pixelRatioChanged', handleMapResize);
 
                 return () => {
                     clearTimeout(timeout);
                     window.removeEventListener('resize', handleMapResize);
+                    window.removeEventListener('orientationchange', handleMapResize);
                     window.removeEventListener('pixelRatioChanged', handleMapResize);
                     if (map.current) {
                         map.current.remove();
@@ -266,9 +290,9 @@ const MapContainer: React.FC = () => {
                 targetMarkerId={targetMarkerId}
                 onAnimationComplete={handleAnimationComplete}
             />
-            {/* <RoundedCard>
+            <RoundedCard showDebugOverlay={false}>
                 <></>
-            </RoundedCard> */}
+            </RoundedCard>
         </div>
     );
 };

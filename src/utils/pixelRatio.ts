@@ -2,6 +2,7 @@ export class PixelRatioManager {
     private static instance: PixelRatioManager;
     private pixelRatio: number = 10;
     private isMobile: boolean = false;
+    private resizeTimeout: number | null = null;
 
     // Resolution thresholds for desktop
     private static readonly RESOLUTION_THRESHOLDS = [
@@ -128,17 +129,22 @@ export class PixelRatioManager {
         this.calculatePixelRatio();
         this.applyPixelRatio();
 
-        window.addEventListener('resize', () => {
-            this.calculatePixelRatio();
-            this.applyPixelRatio();
-        });
+        const handleResize = () => {
+            if (this.resizeTimeout) {
+                clearTimeout(this.resizeTimeout);
+            }
+
+            this.resizeTimeout = window.setTimeout(() => {
+                this.calculatePixelRatio();
+                this.applyPixelRatio();
+            }, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
 
         // Listen for mobile visual viewport changes
         if (this.isMobile && 'visualViewport' in window && window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                this.calculatePixelRatio();
-                this.applyPixelRatio();
-            });
+            window.visualViewport.addEventListener('resize', handleResize);
         }
     }
 }
