@@ -5,6 +5,7 @@ import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
 import RoundedCard from './RoundedCard';
+import ImageContainer from './ImageContainer';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -321,6 +322,7 @@ const MapContainer: React.FC = () => {
                 canGoPrevious={canGoPrevious}
                 canGoNext={canGoNext}
             />
+            <ImageContainer />
         </div>
     );
 };
