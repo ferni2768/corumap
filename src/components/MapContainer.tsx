@@ -73,10 +73,10 @@ const MARKERS = [
 const MapContainer: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isMobile, setIsMobile] = useState(false);
-    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('Millemnium Bench');
+    const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
 
     // Initialize device info
     useEffect(() => {
@@ -255,11 +255,33 @@ const MapContainer: React.FC = () => {
 
     const handleMarkerClick = (markerId: number) => {
         setTargetMarkerId(markerId);
+    }; const handleAnimationComplete = () => {
+        setTargetMarkerId(null);
+    }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
+        setCurrentMarkerLocation(markerName);
+        // Update the current marker index based on the marker ID
+        const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
+        if (markerIndex !== -1) {
+            setCurrentMarkerIndex(markerIndex);
+        }
     };
 
-    const handleAnimationComplete = () => {
-        setTargetMarkerId(null);
+    const handlePreviousMarker = () => {
+        if (currentMarkerIndex > 0) {
+            const previousMarkerId = MARKERS[currentMarkerIndex - 1].id;
+            setTargetMarkerId(previousMarkerId);
+        }
     };
+
+    const handleNextMarker = () => {
+        if (currentMarkerIndex < MARKERS.length - 1) {
+            const nextMarkerId = MARKERS[currentMarkerIndex + 1].id;
+            setTargetMarkerId(nextMarkerId);
+        }
+    };
+
+    const canGoPrevious = currentMarkerIndex > 0;
+    const canGoNext = currentMarkerIndex < MARKERS.length - 1;
 
     if (error) {
         return (
@@ -289,10 +311,16 @@ const MapContainer: React.FC = () => {
                 markers={MARKERS}
                 targetMarkerId={targetMarkerId}
                 onAnimationComplete={handleAnimationComplete}
+                onCurrentMarkerChange={handleCurrentMarkerChange}
             />
-            <RoundedCard showDebugOverlay={false}>
-                <></>
-            </RoundedCard>
+            <RoundedCard
+                showDebugOverlay={false}
+                markerLocationText={currentMarkerLocation}
+                onPreviousMarker={handlePreviousMarker}
+                onNextMarker={handleNextMarker}
+                canGoPrevious={canGoPrevious}
+                canGoNext={canGoNext}
+            />
         </div>
     );
 };

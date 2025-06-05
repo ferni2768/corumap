@@ -1,19 +1,27 @@
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
 import { PixelRatioManager } from '../utils/pixelRatio';
 import '../styles/RoundedCard.css';
 
 interface RoundedCardProps {
-    children: ReactNode;
     className?: string;
     showDebugOverlay?: boolean;
+    markerLocationText?: string;
+    onPreviousMarker?: () => void;
+    onNextMarker?: () => void;
+    canGoPrevious?: boolean;
+    canGoNext?: boolean;
 }
 
 const RoundedCard: React.FC<RoundedCardProps> = ({
-    children,
     className = '',
-    showDebugOverlay = false
+    showDebugOverlay = false,
+    markerLocationText = 'No location selected',
+    onPreviousMarker,
+    onNextMarker,
+    canGoPrevious = false,
+    canGoNext = false
 }) => {
     const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
     const [isMobile, setIsMobile] = useState(false);
@@ -51,9 +59,7 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     }, []);
 
     return (
-        <div
-            className={`rounded-card-container ${debugVisible ? 'debug' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-        >
+        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}>
             <Superellipse
                 className={`rounded-card ${className} ${!isMobile ? 'inner-scaled' : ''}`}
                 r1={Preset.iOS.r1}
@@ -65,9 +71,18 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
                     top: 0,
                     left: 0,
                 }}
-            >
-                {children}
+            >            <div className="card-content">
+                    {markerLocationText}
+                </div>
             </Superellipse>
+            <div
+                className={`card-arrow card-arrow-left ${!canGoPrevious ? 'disabled' : ''}`}
+                onClick={canGoPrevious ? onPreviousMarker : undefined}
+            ></div>
+            <div
+                className={`card-arrow card-arrow-right ${!canGoNext ? 'disabled' : ''}`}
+                onClick={canGoNext ? onNextMarker : undefined}
+            ></div>
         </div>
     );
 };

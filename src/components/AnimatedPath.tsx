@@ -13,6 +13,7 @@ interface AnimatedPathProps {
     markers: MarkerData[];
     targetMarkerId: number | null;
     onAnimationComplete?: () => void;
+    onCurrentMarkerChange?: (markerId: number, markerName: string) => void;
 }
 
 interface CurvePoint {
@@ -33,7 +34,7 @@ const CURVE_CONTROL_POINTS = [
     { cp1: { x: 0.2, y: 0.3 }, cp2: { x: 0.6, y: -0.5 } }                               // 9->10
 ];
 
-const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete }) => {
+const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange }) => {
     const [position, setPosition] = useState<CurvePoint>({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [currentMarkerId, setCurrentMarkerId] = useState<number>(1); // Start at first marker
@@ -107,6 +108,13 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         return path;
     };
 
+    const reportCurrentMarker = (markerId: number) => {
+        const marker = markers.find(m => m.id === markerId);
+        if (marker && onCurrentMarkerChange) {
+            onCurrentMarkerChange(markerId, marker.name);
+        }
+    };
+
     const startAnimation = (targetId: number) => {
         // Only skip if we're already exactly at the target and not animating
         if (targetId === currentExactPositionRef.current && !isAnimatingRef.current) return;
@@ -145,12 +153,14 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         const totalElapsed = now - startTimeRef.current;
         const totalProgress = Math.min(totalElapsed / totalDuration, 1);
 
-        if (totalProgress >= 1) {
-            // Animation complete
+        if (totalProgress >= 1) { // Animation complete
             isAnimatingRef.current = false;
             const finalMarkerId = path[path.length - 1];
             setCurrentMarkerId(finalMarkerId);
             currentExactPositionRef.current = finalMarkerId;
+
+            // Report the new current marker
+            reportCurrentMarker(finalMarkerId);
 
             // Position at the final marker
             const finalMarker = markers.find(m => m.id === finalMarkerId);
@@ -166,10 +176,12 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         // Calculate the target position based on progress
         const startPosition = currentExactPositionRef.current;
         const targetPosition = path[path.length - 1];
-        const currentPosition = startPosition + (targetPosition - startPosition) * totalProgress;
-
-        // Update exact position for interruption tracking
+        const currentPosition = startPosition + (targetPosition - startPosition) * totalProgress;        // Update exact position for interruption tracking
         currentExactPositionRef.current = currentPosition;
+
+        // Report the current marker location based on position (for display only)
+        const currentDisplayMarkerId = Math.round(currentPosition);
+        reportCurrentMarker(currentDisplayMarkerId);
 
         // Determine which segment we're currently on
         const lowerMarkerId = Math.floor(currentPosition);
@@ -206,9 +218,7 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         if (isAnimatingRef.current) {
             animationRef.current = requestAnimationFrame(animate);
         }
-    };
-
-    // Initialize position at first marker
+    };    // Initialize position at first marker
     useEffect(() => {
         if (!map || markers.length === 0) return;
 
@@ -218,6 +228,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         setIsVisible(true);
         setCurrentMarkerId(firstMarker.id);
         currentExactPositionRef.current = firstMarker.id;
+
+        // Report the initial marker
+        reportCurrentMarker(firstMarker.id);
     }, [map, markers]);
 
     // Handle target marker changes
