@@ -70,7 +70,7 @@
     justify-content: center;
     text-align: center;
     font-size: calc(var(--card-text-size) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3vmin);
-    font-weight: 500;
+    font-weight: 700;
     line-height: 1.2;
     z-index: 101;
     pointer-events: none;
