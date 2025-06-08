@@ -1,0 +1,13 @@
+.animated-path-circle {
+    background-color: #ffff00;
+    outline: calc(var(--marker-outline, 1) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
+    border: calc(var(--marker-border, 1) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
+    border-radius: 50%;
+    width: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1vmin);
+    height: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1vmin);
+    position: absolute;
+    pointer-events: none;
+    z-index: 15;
+    box-shadow: 0 2px 8px rgba(255, 255, 0, 0.3);
+    transition: box-shadow 0.2s ease;
+}

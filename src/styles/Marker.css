@@ -1,0 +1,25 @@
+:root {
+    --marker-size: 10;
+    --marker-outline: 1;
+    --marker-border: 1;
+}
+
+.marker {
+    background-color: #ff0000;
+    outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
+    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
+    border-radius: 50%;
+    cursor: pointer;
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
+    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+    position: absolute;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+.marker:hover {
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+}

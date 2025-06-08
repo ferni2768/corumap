@@ -1,0 +1,17 @@
+:root {
+    --pixel-ratio: 3;
+}
+
+*,
+canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: pixelated;
+}
+
+html,
+body {
+    overflow: hidden;
+}
