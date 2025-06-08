@@ -118,15 +118,17 @@ const MapContainer: React.FC = () => {
         const aspectRatio = window.innerWidth / window.innerHeight;
         const baseCenter: [number, number] = [-8.409610, 43.378497];
 
-        if (aspectRatio < 1.5) return [baseCenter[0], baseCenter[1] - 0.005]; // Portrait mode
-        else return [baseCenter[0] + 0.01, baseCenter[1]]; // Landscape mode
+        if (aspectRatio < 0.56) return [baseCenter[0] + 0.001, baseCenter[1] - 0.012]; // Narrow Portrait mode
+        else if (aspectRatio < 1.5) return [baseCenter[0], baseCenter[1] - 0.0085]; // Portrait mode
+        else return [baseCenter[0] + 0.0125, baseCenter[1]]; // Landscape mode
     };
 
     // Get responsive zoom based on aspect ratio
     const getResponsiveZoom = (): number => {
         const aspectRatio = window.innerWidth / window.innerHeight;
 
-        if (aspectRatio < 1.5) return 12; // Portrait mode
+        if (aspectRatio < 0.6) return 12; // Narrow Portrait mode
+        else if (aspectRatio < 1.5) return 11.85; // Portrait mode
         else return 12.5; // Landscape mode
     };
 

@@ -123,10 +123,10 @@
 
     /* Portrait mode wide */
     .rounded-card-container {
-        top: 78%;
+        top: 85%;
         left: 50%;
         width: calc(50% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(12% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {
@@ -142,10 +142,10 @@
 
     /* Portrait mode square */
     .rounded-card-container {
-        top: 78%;
+        top: 85%;
         left: 50%;
         width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(12% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {
@@ -161,10 +161,10 @@
 
     /* Landscape mode */
     .rounded-card-container {
-        top: 75%;
-        left: 65%;
-        width: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        top: 72%;
+        left: 62%;
+        width: calc(33% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(18% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {
