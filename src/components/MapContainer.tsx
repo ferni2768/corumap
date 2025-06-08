@@ -5,7 +5,7 @@ import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
 import RoundedCard from './RoundedCard';
-import ImageContainer from './ImageContainer';
+import Image from './Image';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -78,11 +78,29 @@ const MapContainer: React.FC = () => {
     const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
     const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('Millemnium Bench');
     const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
-
-    // Initialize device info
+    const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Initialize device info
     useEffect(() => {
         const pixelRatioManager = PixelRatioManager.getInstance();
         setIsMobile(pixelRatioManager.isMobileDevice());
+    }, []);
+
+    // Track expanded image state
+    useEffect(() => {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const hasExpanded = document.body.classList.contains('image-expanded');
+                    setHasExpandedImage(hasExpanded);
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        return () => observer.disconnect();
     }, []);
 
     // Calculate bounds based on zoom level and responsive center
@@ -322,7 +340,18 @@ const MapContainer: React.FC = () => {
                 canGoPrevious={canGoPrevious}
                 canGoNext={canGoNext}
             />
-            <ImageContainer />
+            <Image
+                className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                alt="Image 1"
+            />
+            <Image
+                className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                alt="Image 2"
+            />
+            <Image
+                className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                alt="Image 3"
+            />
         </div>
     );
 };
