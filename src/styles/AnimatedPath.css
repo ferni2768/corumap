@@ -3,8 +3,8 @@
     outline: calc(var(--marker-outline, 1) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
     border: calc(var(--marker-border, 1) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
     border-radius: 50%;
-    width: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1vmin);
+    width: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1.2vmin);
+    height: calc(var(--marker-size, 10) * var(--marker-mobile-scale, 1) * 1.2vmin);
     position: absolute;
     pointer-events: none;
     z-index: 15;

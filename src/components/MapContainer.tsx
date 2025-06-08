@@ -21,52 +21,52 @@ mapboxgl.accessToken = accessToken;
 const MARKERS = [
     {
         id: 1,
-        name: "Millemnium Bench",
+        name: "1. Millenium Bench",
         coordinates: [-8.424606, 43.377608] as [number, number]
     },
     {
         id: 2,
-        name: "Riazor Sea Sight",
+        name: "2. Riazor Sea Sight",
         coordinates: [-8.414186, 43.370781] as [number, number]
     },
     {
         id: 3,
-        name: "Rompeolas",
+        name: "3. Rompeolas",
         coordinates: [-8.406707, 43.369615] as [number, number]
     },
     {
         id: 4,
-        name: "Under the promenade columns",
+        name: "4. Under the promenade columns",
         coordinates: [-8.406837, 43.376709] as [number, number]
     },
     {
         id: 5,
-        name: "Aquarium sight",
+        name: "5. Aquarium sight",
         coordinates: [-8.410986, 43.382821] as [number, number]
     },
     {
         id: 6,
-        name: "Tower of Hercules best sight",
+        name: "6. Tower of Hercules best sight",
         coordinates: [-8.407060, 43.383382] as [number, number]
     },
     {
         id: 7,
-        name: "Rosa dos Ventos",
+        name: "7. Rosa dos Ventos",
         coordinates: [-8.407725, 43.386702] as [number, number]
     },
     {
         id: 8,
-        name: "Tower of Hercules far sight",
+        name: "8. Tower of Hercules far sight",
         coordinates: [-8.399772, 43.388004] as [number, number]
     },
     {
         id: 9,
-        name: "Menhirs and Arab Graveyard",
+        name: "9. Menhirs and Arab Graveyard",
         coordinates: [-8.392542, 43.385254] as [number, number]
     },
     {
         id: 10,
-        name: "San Amaro",
+        name: "10. San Amaro",
         coordinates: [-8.395798, 43.381765] as [number, number]
     }
 ];
@@ -76,7 +76,7 @@ const MapContainer: React.FC = () => {
     const map = useRef<mapboxgl.Map | null>(null);
     const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('Millemnium Bench');
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
     const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
     const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Initialize device info
     useEffect(() => {
