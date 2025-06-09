@@ -19,7 +19,7 @@
     box-sizing: border-box;
     margin: 0;
     cursor: pointer;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     transform-origin: center center;
     backface-visibility: hidden;
     transform: translateZ(0);
@@ -51,10 +51,12 @@
     z-index: 98;
     box-sizing: border-box;
     margin: 0;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
+    /* Hardware acceleration */
+    will-change: transform;
 }
 
 /* Force Superellipse to fill container */
@@ -102,7 +104,7 @@
 }
 
 .image-component.inner-scaled {
-    transform: scale(3.075);
+    transform: scale(3.075) translateZ(0);
 }
 
 /* Image expansion overlay */
@@ -115,9 +117,10 @@
     background: rgba(0, 0, 0, 0.7);
     z-index: 10000;
     cursor: pointer;
-    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     will-change: opacity;
     backface-visibility: hidden;
+    transform: translateZ(0);
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
 }
@@ -135,8 +138,9 @@
 /* Optimized animation states */
 .image-wrapper.animating {
     z-index: 10002 !important;
-    will-change: top, left, width, height, transform;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
 /* Pre-expansion state - prepare for animation */
@@ -147,55 +151,57 @@
     width: var(--image-initial-width);
     height: var(--image-initial-height);
     z-index: 10002 !important;
-    transform: translate(0, 0) !important;
-    will-change: top, left, width, height, transform;
+    transform: translateZ(0) !important;
+    will-change: top, left, width, height;
     contain: layout;
 }
 
-/* Expanding animation */
+/* Expanding animation with hardware acceleration */
 .image-wrapper.expanding {
     position: fixed !important;
     z-index: 10002 !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    will-change: top, left, width, height, transform;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
-/* Base for expanded state */
+/* Base for expanded state with hardware acceleration */
 .image-wrapper.expanded {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
     width: calc(var(--image-expanded-height) * 9 / 16 * 1dvh * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3) !important;
     height: calc(var(--image-expanded-height) * 1dvh * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3) !important;
-    transform: translate(-50%, -50%) !important;
+    transform: translate(-50%, -50%) translateZ(0) !important;
     z-index: 10002 !important;
     margin: 0 !important;
     padding: 0 !important;
     max-width: calc(var(--image-max-width) * 1% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
     max-height: calc(var(--image-max-height) * 1% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: auto;
     contain: layout;
 }
 
-/* Collapsing state */
+/* Collapsing state with hardware acceleration */
 .image-wrapper.collapsing {
     position: fixed !important;
     z-index: 10002 !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    will-change: top, left, width, height, transform;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
 .image-wrapper.expanded .image-component {
     pointer-events: auto;
-    transform: none !important;
+    transform: translateZ(0) !important;
     will-change: auto;
 }
 
 .image-wrapper.expanded .image-component.inner-scaled {
-    transform: none !important;
+    transform: translateZ(0) !important;
 }
 
 /* Content for each image */

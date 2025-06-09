@@ -31,12 +31,10 @@ export class PixelRatioManager {
 
         // Check user agent
         const hasMobileKeyword = mobileKeywords.some(keyword => userAgent.includes(keyword));
-
-        // Check for touch capability and screen size
+        // Check for touch capability
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const hasSmallScreen = window.innerWidth <= 1024 || window.innerHeight <= 768;
 
-        return hasMobileKeyword || (isTouchDevice && hasSmallScreen);
+        return hasMobileKeyword || (isTouchDevice);
     }
 
     private getViewportDimensions(): { width: number; height: number } {

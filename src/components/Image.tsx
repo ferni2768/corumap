@@ -21,7 +21,9 @@ const Image: React.FC<ImageProps> = ({
     const [allowTransitions, setAllowTransitions] = useState(true);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
-    const transitionTimeoutRef = useRef<NodeJS.Timeout>(); useEffect(() => {
+    const transitionTimeoutRef = useRef<NodeJS.Timeout>();
+
+    useEffect(() => {
         const updateMobileStatus = () => {
             // Temporarily disable transitions during resize/orientation change
             setAllowTransitions(false);
@@ -88,7 +90,9 @@ const Image: React.FC<ImageProps> = ({
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = undefined;
         }
-    }, []); const handleClose = useCallback(() => {
+    }, []);
+
+    const handleClose = useCallback(() => {
         if (animationState !== 'idle' && animationState !== 'expanding') return;
 
         clearAnimationTimeout();
@@ -101,18 +105,18 @@ const Image: React.FC<ImageProps> = ({
             const wrapper = wrapperRef.current;
             const rect = wrapper.getBoundingClientRect();
 
-            // Batch all style changes to minimize reflows
+            // Batch all style changes to minimize reflows + add hardware acceleration
             const styles = {
                 position: 'fixed',
                 top: `${rect.top}px`,
                 left: `${rect.left}px`,
                 width: `${rect.width}px`,
                 height: `${rect.height}px`,
-                transform: 'none',
+                transform: 'translateZ(0)',
                 zIndex: '10002',
                 margin: '0',
                 padding: '0',
-                willChange: 'top, left, width, height, transform'
+                willChange: 'top, left, width, height'
             };
 
             Object.assign(wrapper.style, styles);
@@ -142,7 +146,7 @@ const Image: React.FC<ImageProps> = ({
             const root = document.documentElement;
             const propsToRemove = ['--image-initial-x', '--image-initial-y', '--image-initial-width', '--image-initial-height'];
             propsToRemove.forEach(prop => root.style.removeProperty(prop));
-        }, 600);
+        }, 300);
     }, [animationState, clearAnimationTimeout]);
 
     const handleImageClick = useCallback((e: React.MouseEvent) => {
@@ -159,7 +163,9 @@ const Image: React.FC<ImageProps> = ({
         if (isExpanded) {
             handleClose();
             return;
-        } clearAnimationTimeout();
+        }
+
+        clearAnimationTimeout();
 
         // Enable transitions for the expand animation
         setAllowTransitions(true);
@@ -169,6 +175,12 @@ const Image: React.FC<ImageProps> = ({
 
         // Prepare for expansion with position data
         setAnimationState('preparing');
+
+        // Add hardware acceleration hint
+        if (wrapperRef.current) {
+            wrapperRef.current.style.transform = 'translateZ(0)';
+            wrapperRef.current.style.willChange = 'top, left, width, height';
+        }
 
         // Optimized animation sequence
         requestAnimationFrame(() => {
@@ -185,7 +197,7 @@ const Image: React.FC<ImageProps> = ({
             if (wrapperRef.current) {
                 wrapperRef.current.style.willChange = '';
             }
-        }, 600);
+        }, 300);
     }, [animationState, isExpanded, handleClose, clearAnimationTimeout, setInitialPosition]);
 
     const handleOverlayClick = useCallback((e: React.MouseEvent) => {
@@ -198,7 +210,9 @@ const Image: React.FC<ImageProps> = ({
         return () => {
             clearAnimationTimeout();
         };
-    }, [clearAnimationTimeout]); const getWrapperClasses = () => {
+    }, [clearAnimationTimeout]);
+
+    const getWrapperClasses = () => {
         const classes = ['image-wrapper', className];
 
         if (isExpanded) classes.push('expanded');
