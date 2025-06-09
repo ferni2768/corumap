@@ -93,6 +93,12 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         const startMarkerId = Math.floor(from);
         const endMarkerId = to;
 
+        // If we're between markers and want to go to the lower marker, 
+        // we need to include the current segment
+        if (startMarkerId === endMarkerId && from > startMarkerId) {
+            return [Math.ceil(from), endMarkerId];
+        }
+
         if (startMarkerId === endMarkerId) return [];
 
         const path: number[] = [];
@@ -177,7 +183,6 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         const targetPosition = path[path.length - 1];
         const currentPosition = animationStartPosition + (targetPosition - animationStartPosition) * totalProgress;
         currentExactPositionRef.current = currentPosition;
-        // Handle forward vs backward travel differently for optimal responsiveness
         const startPosition = pathToFollowRef.current[0];
         const endPosition = pathToFollowRef.current[pathToFollowRef.current.length - 1];
         const isForwardTravel = endPosition > startPosition;

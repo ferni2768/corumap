@@ -319,6 +319,30 @@ const MapContainer: React.FC = () => {
     const canGoPrevious = currentMarkerIndex > 0;
     const canGoNext = currentMarkerIndex < MARKERS.length - 1;
 
+    // Handle keyboard navigation
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent) => {
+            if (document.activeElement?.tagName === 'INPUT' ||
+                document.activeElement?.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            switch (event.key) {
+                case 'ArrowLeft':
+                    event.preventDefault();
+                    handlePreviousMarker();
+                    break;
+                case 'ArrowRight':
+                    event.preventDefault();
+                    handleNextMarker();
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [currentMarkerIndex]);
+
     if (error) {
         return (
             <div className="map-container error">
