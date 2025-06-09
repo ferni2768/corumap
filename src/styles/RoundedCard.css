@@ -1,11 +1,10 @@
 :root {
     --card-blur-amount: 15;
     --card-padding: 4;
-    --card-font-size: 8;
     --card-heading-size: 15;
-    --card-text-size: 12;
+    --card-text-size: 13;
     --card-shadow-size: 2;
-    --card-arrow-margin: 13%;
+    --card-arrow-margin: 10%;
 }
 
 .rounded-card {
@@ -20,7 +19,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: calc(var(--card-font-size) * var(--marker-mobile-scale, 1) * 1vmin);
     pointer-events: none;
     z-index: 100;
     box-sizing: border-box;
@@ -61,28 +59,159 @@
     box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
 }
 
-.rounded-card .card-content {
+.card-content {
+    position: absolute;
+    top: 0;
+    left: 20%;
+    width: 60%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    width: 100%;
-    font-size: calc(var(--card-text-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    font-weight: 500;
+    font-size: calc(var(--card-text-size) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3vmin);
+    font-weight: 700;
     line-height: 1.2;
+    z-index: 101;
+    pointer-events: none;
+    color: white;
+    overflow: hidden;
+    position: relative;
+}
+
+.card-text-primary,
+.card-text-secondary {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: transform 0.175s ease, opacity 0.0875s ease;
+}
+
+/* Static positioning */
+.card-text-primary.active,
+.card-text-secondary.active {
+    transform: translateX(0%);
+    opacity: 1;
+    transition: transform 0.175s ease, opacity 0.0875s ease 0.0875s;
+}
+
+.card-text-primary.inactive,
+.card-text-secondary.inactive {
+    transform: translateX(50%);
+    opacity: 0;
+    transition: transform 0.175s ease, opacity 0.0875s ease;
+}
+
+/* Forward: out left, in from right */
+.card-text-primary.animate-forward.active,
+.card-text-secondary.animate-forward.active {
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: transform 0.175s ease-in, opacity 0.0875s ease-in;
+}
+
+.card-text-primary.animate-forward.inactive,
+.card-text-secondary.animate-forward.inactive {
+    transform: translateX(0%);
+    opacity: 1;
+    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+/* Backward: out right, in from left */
+.card-text-primary.animate-backward.active,
+.card-text-secondary.animate-backward.active {
+    transform: translateX(50%);
+    opacity: 0;
+    transition: transform 0.175s ease-in, opacity 0.0875s ease-in;
+}
+
+.card-text-primary.animate-backward.inactive,
+.card-text-secondary.animate-backward.inactive {
+    transform: translateX(0%);
+    opacity: 1;
+    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+/* Backward positioning override */
+.card-text-primary.animate-backward.inactive {
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+.card-text-secondary.animate-backward.inactive {
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+/* Fast animations for long jumps (30% faster) */
+.card-text-primary.fast-animation,
+.card-text-secondary.fast-animation {
+    transition: transform 0.1225s ease, opacity 0.06125s ease;
+}
+
+.card-text-primary.fast-animation.active,
+.card-text-secondary.fast-animation.active {
+    transition: transform 0.1225s ease, opacity 0.06125s ease 0.06125s;
+}
+
+.card-text-primary.fast-animation.inactive,
+.card-text-secondary.fast-animation.inactive {
+    transition: transform 0.1225s ease, opacity 0.06125s ease;
+}
+
+.card-text-primary.fast-animation.animate-forward.active,
+.card-text-secondary.fast-animation.animate-forward.active {
+    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+}
+
+.card-text-primary.fast-animation.animate-forward.inactive,
+.card-text-secondary.fast-animation.animate-forward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-primary.fast-animation.animate-backward.active,
+.card-text-secondary.fast-animation.animate-backward.active {
+    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+}
+
+.card-text-primary.fast-animation.animate-backward.inactive,
+.card-text-secondary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-primary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-secondary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
 }
 
 .card-arrow {
     position: absolute;
     top: 50%;
-    width: calc(5 * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(5 * var(--marker-mobile-scale, 1) * 1vmin);
+    width: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
+    height: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
     transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 20));
     z-index: 102;
     pointer-events: auto;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 .card-arrow:hover {
     cursor: pointer;
     transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 25));
+    filter: brightness(0.9);
     transition: transform 0.1s;
     opacity: 1;
 }
@@ -123,10 +252,10 @@
 
     /* Portrait mode wide */
     .rounded-card-container {
-        top: 78%;
+        top: 85%;
         left: 50%;
         width: calc(50% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(12% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {
@@ -142,10 +271,10 @@
 
     /* Portrait mode square */
     .rounded-card-container {
-        top: 78%;
+        top: 85%;
         left: 50%;
         width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(12% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {
@@ -161,10 +290,10 @@
 
     /* Landscape mode */
     .rounded-card-container {
-        top: 75%;
-        left: 65%;
-        width: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        top: 72%;
+        left: 62%;
+        width: calc(33% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        height: calc(18% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
     }
 
     .rounded-card-container.mobile-position {

@@ -58,14 +58,12 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
         onMarkerClick?.(markerId);
     };
 
-    if (markerPositions.length === 0) return null;
-
-    return (
+    if (markerPositions.length === 0) return null; return (
         <>
             {markerPositions.map(marker => (
                 <div
                     key={marker.id}
-                    className="marker"
+                    className="marker-hitbox"
                     style={{
                         left: `${marker.x}px`,
                         top: `${marker.y}px`,
@@ -73,7 +71,9 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
                     }}
                     title={marker.name}
                     onClick={() => handleMarkerClick(marker.id)}
-                />
+                >
+                    <div className="marker-visual" />
+                </div>
             ))}
         </>
     );

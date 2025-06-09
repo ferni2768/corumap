@@ -21,52 +21,52 @@ mapboxgl.accessToken = accessToken;
 const MARKERS = [
     {
         id: 1,
-        name: "Millemnium Bench",
+        name: "1. Millenium Bench",
         coordinates: [-8.424606, 43.377608] as [number, number]
     },
     {
         id: 2,
-        name: "Riazor Sea Sight",
+        name: "2. Riazor Sea Sight",
         coordinates: [-8.414186, 43.370781] as [number, number]
     },
     {
         id: 3,
-        name: "Rompeolas",
+        name: "3. Rompeolas",
         coordinates: [-8.406707, 43.369615] as [number, number]
     },
     {
         id: 4,
-        name: "Under the promenade columns",
+        name: "4. Under the promenade columns",
         coordinates: [-8.406837, 43.376709] as [number, number]
     },
     {
         id: 5,
-        name: "Aquarium sight",
+        name: "5. Aquarium sight",
         coordinates: [-8.410986, 43.382821] as [number, number]
     },
     {
         id: 6,
-        name: "Tower of Hercules best sight",
+        name: "6. Tower of Hercules best sight",
         coordinates: [-8.407060, 43.383382] as [number, number]
     },
     {
         id: 7,
-        name: "Rosa dos Ventos",
+        name: "7. Rosa dos Ventos",
         coordinates: [-8.407725, 43.386702] as [number, number]
     },
     {
         id: 8,
-        name: "Tower of Hercules far sight",
+        name: "8. Tower of Hercules far sight",
         coordinates: [-8.399772, 43.388004] as [number, number]
     },
     {
         id: 9,
-        name: "Menhirs and Arab Graveyard",
+        name: "9. Menhirs and Arab Graveyard",
         coordinates: [-8.392542, 43.385254] as [number, number]
     },
     {
         id: 10,
-        name: "San Amaro",
+        name: "10. San Amaro",
         coordinates: [-8.395798, 43.381765] as [number, number]
     }
 ];
@@ -75,10 +75,11 @@ const MapContainer: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
-    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('Millemnium Bench');
+    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null); const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
     const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
-    const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Initialize device info
+    const [previousMarkerIndex, setPreviousMarkerIndex] = useState<number>(0); // Track previous marker index for jump detection
+    const [fastAnimation, setFastAnimation] = useState<boolean>(false); // Fast animation mode for long jumps
+    const [hasExpandedImage, setHasExpandedImage] = useState(false);// Initialize device info
     useEffect(() => {
         const pixelRatioManager = PixelRatioManager.getInstance();
         setIsMobile(pixelRatioManager.isMobileDevice());
@@ -118,15 +119,17 @@ const MapContainer: React.FC = () => {
         const aspectRatio = window.innerWidth / window.innerHeight;
         const baseCenter: [number, number] = [-8.409610, 43.378497];
 
-        if (aspectRatio < 1.5) return [baseCenter[0], baseCenter[1] - 0.005]; // Portrait mode
-        else return [baseCenter[0] + 0.01, baseCenter[1]]; // Landscape mode
+        if (aspectRatio < 0.56) return [baseCenter[0] + 0.001, baseCenter[1] - 0.012]; // Narrow Portrait mode
+        else if (aspectRatio < 1.5) return [baseCenter[0], baseCenter[1] - 0.0085]; // Portrait mode
+        else return [baseCenter[0] + 0.0125, baseCenter[1]]; // Landscape mode
     };
 
     // Get responsive zoom based on aspect ratio
     const getResponsiveZoom = (): number => {
         const aspectRatio = window.innerWidth / window.innerHeight;
 
-        if (aspectRatio < 1.5) return 12; // Portrait mode
+        if (aspectRatio < 0.6) return 12; // Narrow Portrait mode
+        else if (aspectRatio < 1.5) return 11.85; // Portrait mode
         else return 12.5; // Landscape mode
     };
 
@@ -274,13 +277,27 @@ const MapContainer: React.FC = () => {
 
     const handleMarkerClick = (markerId: number) => {
         setTargetMarkerId(markerId);
-    }; const handleAnimationComplete = () => {
+    };
+
+    const handleAnimationComplete = () => {
         setTargetMarkerId(null);
     }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
         if (markerIndex !== -1) {
+            // Calculate the jump distance to detect long jumps
+            const jumpDistance = Math.abs(markerIndex - previousMarkerIndex);
+
+            // Enable fast animation for jumps more than 6 markers apart
+            if (jumpDistance > 6) {
+                setFastAnimation(true);
+                setTimeout(() => {
+                    setFastAnimation(false);
+                }, 150);
+            }
+
+            setPreviousMarkerIndex(currentMarkerIndex);
             setCurrentMarkerIndex(markerIndex);
         }
     };
@@ -339,6 +356,7 @@ const MapContainer: React.FC = () => {
                 onNextMarker={handleNextMarker}
                 canGoPrevious={canGoPrevious}
                 canGoNext={canGoNext}
+                fastAnimation={fastAnimation}
             />
             <Image
                 className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
