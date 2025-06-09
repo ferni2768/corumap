@@ -12,6 +12,7 @@ interface RoundedCardProps {
     onNextMarker?: () => void;
     canGoPrevious?: boolean;
     canGoNext?: boolean;
+    fastAnimation?: boolean;
 }
 
 const RoundedCard: React.FC<RoundedCardProps> = ({
@@ -21,7 +22,8 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     onPreviousMarker,
     onNextMarker,
     canGoPrevious = false,
-    canGoNext = false
+    canGoNext = false,
+    fastAnimation = false
 }) => {
     const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
     const [isMobile, setIsMobile] = useState(false);
@@ -173,14 +175,14 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             />
             <div className="card-content">
                 <div
-                    className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'}`}
+                    className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''}`}
                     data-positioned={isPositioned}
                     onTransitionEnd={primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {primaryIsActive ? currentText : nextText}
                 </div>
                 <div
-                    className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'}`}
+                    className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''}`}
                     data-positioned={isPositioned}
                     onTransitionEnd={!primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >

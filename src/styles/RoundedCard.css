@@ -4,7 +4,7 @@
     --card-heading-size: 15;
     --card-text-size: 13;
     --card-shadow-size: 2;
-    --card-arrow-margin: 13%;
+    --card-arrow-margin: 10%;
 }
 
 .rounded-card {
@@ -151,11 +151,55 @@
     transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
 }
 
+/* Fast animations for long jumps (30% faster) */
+.card-text-primary.fast-animation,
+.card-text-secondary.fast-animation {
+    transition: transform 0.1225s ease, opacity 0.06125s ease;
+}
+
+.card-text-primary.fast-animation.active,
+.card-text-secondary.fast-animation.active {
+    transition: transform 0.1225s ease, opacity 0.06125s ease 0.06125s;
+}
+
+.card-text-primary.fast-animation.inactive,
+.card-text-secondary.fast-animation.inactive {
+    transition: transform 0.1225s ease, opacity 0.06125s ease;
+}
+
+.card-text-primary.fast-animation.animate-forward.active,
+.card-text-secondary.fast-animation.animate-forward.active {
+    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+}
+
+.card-text-primary.fast-animation.animate-forward.inactive,
+.card-text-secondary.fast-animation.animate-forward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-primary.fast-animation.animate-backward.active,
+.card-text-secondary.fast-animation.animate-backward.active {
+    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+}
+
+.card-text-primary.fast-animation.animate-backward.inactive,
+.card-text-secondary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-primary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
+.card-text-secondary.fast-animation.animate-backward.inactive {
+    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+}
+
 .card-arrow {
     position: absolute;
     top: 50%;
-    width: calc(5 * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(5 * var(--marker-mobile-scale, 1) * 1vmin);
+    width: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
+    height: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
     transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 20));
     z-index: 102;
     pointer-events: auto;

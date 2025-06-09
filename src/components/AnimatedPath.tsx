@@ -172,15 +172,26 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
             onAnimationComplete?.();
             return;
         }
-
         // Calculate the target position based on progress
-        const startPosition = currentExactPositionRef.current;
+        const animationStartPosition = currentExactPositionRef.current;
         const targetPosition = path[path.length - 1];
-        const currentPosition = startPosition + (targetPosition - startPosition) * totalProgress;        // Update exact position for interruption tracking
+        const currentPosition = animationStartPosition + (targetPosition - animationStartPosition) * totalProgress;
         currentExactPositionRef.current = currentPosition;
+        // Handle forward vs backward travel differently for optimal responsiveness
+        const startPosition = pathToFollowRef.current[0];
+        const endPosition = pathToFollowRef.current[pathToFollowRef.current.length - 1];
+        const isForwardTravel = endPosition > startPosition;
 
-        // Report the current marker location based on position (for display only)
-        const currentDisplayMarkerId = Math.round(currentPosition);
+        let currentDisplayMarkerId: number;
+        if (isForwardTravel) {
+            // Forward: Show destination marker immediately when journey starts
+            currentDisplayMarkerId = Math.ceil(currentPosition);
+        } else {
+            // Backward: Show current marker until actually leaving it
+            const paddedPosition = currentPosition + 0.05;
+            currentDisplayMarkerId = Math.floor(paddedPosition);
+        }
+
         reportCurrentMarker(currentDisplayMarkerId);
 
         // Determine which segment we're currently on

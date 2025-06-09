@@ -75,10 +75,11 @@ const MapContainer: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
     const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
-    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
+    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null); const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
     const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
-    const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Initialize device info
+    const [previousMarkerIndex, setPreviousMarkerIndex] = useState<number>(0); // Track previous marker index for jump detection
+    const [fastAnimation, setFastAnimation] = useState<boolean>(false); // Fast animation mode for long jumps
+    const [hasExpandedImage, setHasExpandedImage] = useState(false);// Initialize device info
     useEffect(() => {
         const pixelRatioManager = PixelRatioManager.getInstance();
         setIsMobile(pixelRatioManager.isMobileDevice());
@@ -276,13 +277,27 @@ const MapContainer: React.FC = () => {
 
     const handleMarkerClick = (markerId: number) => {
         setTargetMarkerId(markerId);
-    }; const handleAnimationComplete = () => {
+    };
+
+    const handleAnimationComplete = () => {
         setTargetMarkerId(null);
     }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
         if (markerIndex !== -1) {
+            // Calculate the jump distance to detect long jumps
+            const jumpDistance = Math.abs(markerIndex - previousMarkerIndex);
+
+            // Enable fast animation for jumps more than 6 markers apart
+            if (jumpDistance > 6) {
+                setFastAnimation(true);
+                setTimeout(() => {
+                    setFastAnimation(false);
+                }, 150);
+            }
+
+            setPreviousMarkerIndex(currentMarkerIndex);
             setCurrentMarkerIndex(markerIndex);
         }
     };
@@ -341,6 +356,7 @@ const MapContainer: React.FC = () => {
                 onNextMarker={handleNextMarker}
                 canGoPrevious={canGoPrevious}
                 canGoNext={canGoNext}
+                fastAnimation={fastAnimation}
             />
             <Image
                 className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
