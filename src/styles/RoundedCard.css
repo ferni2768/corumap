@@ -98,6 +98,14 @@
     transition: transform 0.175s ease, opacity 0.0875s ease;
 }
 
+/* Special positioning for backward animations: new text starts from left */
+.card-text-primary.backward-start,
+.card-text-secondary.backward-start {
+    transform: translateX(-50%) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
 /* Forward: out left, in from right */
 .card-text-primary.animate-forward.active,
 .card-text-secondary.animate-forward.active {
@@ -128,20 +136,7 @@
     transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
 }
 
-/* Backward positioning override */
-.card-text-primary.animate-backward.inactive {
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
-}
-
-.card-text-secondary.animate-backward.inactive {
-    transform: translateX(-50%);
-    opacity: 0;
-    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
-}
-
-/* Fast animations for long jumps (30% faster) */
+/* Fast animations for long jumps */
 .card-text-primary.fast-animation,
 .card-text-secondary.fast-animation {
     transition: transform 0.1s ease, opacity 0.05s ease;
@@ -173,14 +168,6 @@
 }
 
 .card-text-primary.fast-animation.animate-backward.inactive,
-.card-text-secondary.fast-animation.animate-backward.inactive {
-    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
-}
-
-.card-text-primary.fast-animation.animate-backward.inactive {
-    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
-}
-
 .card-text-secondary.fast-animation.animate-backward.inactive {
     transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
 }

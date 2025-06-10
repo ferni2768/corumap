@@ -78,11 +78,10 @@ const MapContainer: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
-    const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
-    const [previousMarkerIndex, setPreviousMarkerIndex] = useState<number>(0); // Track previous marker index for jump detection
-    const [fastAnimation, setFastAnimation] = useState<boolean>(false); // Fast animation mode for long jumps
-    const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Animation states
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench'); const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
+    const [fastAnimation, setFastAnimation] = useState<boolean>(false);
+    const [animationDirection, setAnimationDirection] = useState<'forward' | 'backward'>('forward');
+    const [hasExpandedImage, setHasExpandedImage] = useState(false);
     const [showRoundedCard, setShowRoundedCard] = useState(false);
     const [showImages, setShowImages] = useState(false);
     const [showMarkers, setShowMarkers] = useState(false);
@@ -327,36 +326,38 @@ const MapContainer: React.FC = () => {
     }, [isMobile]);
 
     const handleMarkerClick = (markerId: number) => {
-        setTargetMarkerId(markerId);
-    };
+        // Calculate direction based on current vs target marker
+        const targetIndex = MARKERS.findIndex(marker => marker.id === markerId);
+        if (targetIndex !== -1) {
+            const direction = targetIndex > currentMarkerIndex ? 'forward' : 'backward';
+            setAnimationDirection(direction);
 
-    const handleAnimationComplete = () => {
-        setTargetMarkerId(null);
-    };
-
-    const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
-        setCurrentMarkerLocation(markerName);
-        // Update the current marker index based on the marker ID
-        const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
-        if (markerIndex !== -1) {
-            // Calculate the jump distance to detect long jumps
-            const jumpDistance = Math.abs(markerIndex - previousMarkerIndex);
-
-            // Enable fast animation for jumps more than 6 markers apart
+            // Calculate the jump distance to detect long jumps and enable fast animation
+            const jumpDistance = Math.abs(targetIndex - currentMarkerIndex);
             if (jumpDistance > 6) {
                 setFastAnimation(true);
                 setTimeout(() => {
                     setFastAnimation(false);
                 }, 1500);
             }
+        }
+        setTargetMarkerId(markerId);
+    };
 
-            setPreviousMarkerIndex(currentMarkerIndex);
+    const handleAnimationComplete = () => {
+        setTargetMarkerId(null);
+    }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
+        setCurrentMarkerLocation(markerName);
+        // Update the current marker index based on the marker ID
+        const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
+        if (markerIndex !== -1) {
             setCurrentMarkerIndex(markerIndex);
         }
     };
 
     const handlePreviousMarker = () => {
         if (currentMarkerIndex > 0) {
+            setAnimationDirection('backward');
             const previousMarkerId = MARKERS[currentMarkerIndex - 1].id;
             setTargetMarkerId(previousMarkerId);
         }
@@ -364,6 +365,7 @@ const MapContainer: React.FC = () => {
 
     const handleNextMarker = () => {
         if (currentMarkerIndex < MARKERS.length - 1) {
+            setAnimationDirection('forward');
             const nextMarkerId = MARKERS[currentMarkerIndex + 1].id;
             setTargetMarkerId(nextMarkerId);
         }
@@ -378,15 +380,19 @@ const MapContainer: React.FC = () => {
             if (document.activeElement?.tagName === 'INPUT' ||
                 document.activeElement?.tagName === 'TEXTAREA') {
                 return;
-            }
-
-            switch (event.key) {
+            } switch (event.key) {
                 case 'ArrowLeft':
                     event.preventDefault();
+                    if (currentMarkerIndex > 0) {
+                        setAnimationDirection('backward');
+                    }
                     handlePreviousMarker();
                     break;
                 case 'ArrowRight':
                     event.preventDefault();
+                    if (currentMarkerIndex < MARKERS.length - 1) {
+                        setAnimationDirection('forward');
+                    }
                     handleNextMarker();
                     break;
             }
@@ -396,7 +402,9 @@ const MapContainer: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
         };
-    }, [currentMarkerIndex]); return (
+    }, [currentMarkerIndex]);
+
+    return (
         <>
             <div className="map-wrapper">
                 <div ref={mapContainer} className="map-container" />
@@ -471,6 +479,7 @@ const MapContainer: React.FC = () => {
                                 canGoPrevious={canGoPrevious}
                                 canGoNext={canGoNext}
                                 fastAnimation={fastAnimation}
+                                externalAnimationDirection={animationDirection}
                             />
                         </div>
                     </>
