@@ -26,7 +26,7 @@ const MARKERS = [
     },
     {
         id: 2,
-        name: "2. Riazor Sea Sight",
+        name: "2. Riazor Viewpoint",
         coordinates: [-8.414186, 43.370781] as [number, number]
     },
     {
@@ -36,17 +36,17 @@ const MARKERS = [
     },
     {
         id: 4,
-        name: "4. Under the promenade columns",
+        name: "4. Underground columns",
         coordinates: [-8.406837, 43.376709] as [number, number]
     },
     {
         id: 5,
-        name: "5. Aquarium sight",
+        name: "5. Aquarium Viewpoint",
         coordinates: [-8.410986, 43.382821] as [number, number]
     },
     {
         id: 6,
-        name: "6. Tower of Hercules best sight",
+        name: "6. Praia das Lapas",
         coordinates: [-8.407060, 43.383382] as [number, number]
     },
     {
@@ -56,12 +56,12 @@ const MARKERS = [
     },
     {
         id: 8,
-        name: "8. Tower of Hercules far sight",
+        name: "8. Tower of Hercules viewpoint",
         coordinates: [-8.399772, 43.388004] as [number, number]
     },
     {
         id: 9,
-        name: "9. Menhirs and Arab Graveyard",
+        name: "9. Menhirs & Arab Graveyard",
         coordinates: [-8.392542, 43.385254] as [number, number]
     },
     {
@@ -88,6 +88,7 @@ const MapContainer: React.FC = () => {
     const [showMarkers, setShowMarkers] = useState(false);
     const [showCurve, setShowCurve] = useState(false);
     const [showAnimatedPath, setShowAnimatedPath] = useState(false);
+    const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
 
     // Generate organic random delays for images
     const [organicImageDelays] = useState(() => {
@@ -172,11 +173,45 @@ const MapContainer: React.FC = () => {
     useEffect(() => {
         if (map.current || !mapContainer.current) return;
 
+        // Handle map resize for responsive design
+        const handleMapResize = () => {
+            // Update container dimensions for mobile devices
+            if (isMobile && mapContainer.current) {
+                const viewport = getViewportDimensions();
+                const mapWrapper = mapContainer.current.parentElement;
+
+                if (mapWrapper) {
+                    mapWrapper.style.width = `${viewport.width}px`;
+                    mapWrapper.style.height = `${viewport.height}px`;
+                }
+
+                mapContainer.current.style.width = `${viewport.width}px`;
+                mapContainer.current.style.height = `${viewport.height}px`;
+            }
+
+            if (map.current) {
+                // Update center and bounds based on new aspect ratio
+                const newCenter = getResponsiveCenter();
+                const newZoom = getResponsiveZoom();
+                const newBounds = calculateBounds(newZoom);
+
+                map.current.resize();
+                map.current.setCenter(newCenter);
+                map.current.setZoom(newZoom);
+                map.current.fitBounds(newBounds, { padding: 20, animate: false });
+            }
+        };
+
+        // Add resize handlers immediately, even before map initialization
+        window.addEventListener('resize', handleMapResize);
+        window.addEventListener('orientationchange', handleMapResize);
+        window.addEventListener('pixelRatioChanged', handleMapResize);
+
         const initMap = () => {
             try {
+                // Always get current dimensions at the time of initialization
                 const center = getResponsiveCenter();
                 const zoom = getResponsiveZoom();
-                const bounds = calculateBounds(zoom);
 
                 // Set mobile container size before map initialization
                 if (isMobile && mapContainer.current) {
@@ -209,7 +244,15 @@ const MapContainer: React.FC = () => {
                     isLoaded = true;
                     setLoading(false);
 
-                    map.current.fitBounds(bounds, { padding: 20, animate: false });
+                    // Recalculate bounds with current dimensions when map loads
+                    const currentCenter = getResponsiveCenter();
+                    const currentZoom = getResponsiveZoom();
+                    const currentBounds = calculateBounds(currentZoom);
+
+                    // Update map to current dimensions
+                    map.current.setCenter(currentCenter);
+                    map.current.setZoom(currentZoom);
+                    map.current.fitBounds(currentBounds, { padding: 20, animate: false });
 
                     // Disable all interactions
                     map.current.boxZoom.disable();
@@ -226,10 +269,11 @@ const MapContainer: React.FC = () => {
 
                 const startWelcomingAnimation = () => {
                     setTimeout(() => setShowMarkers(true), 200);
-                    setTimeout(() => setShowCurve(true), 1500);
+                    setTimeout(() => setShowCurve(true), 1000);
                     setTimeout(() => setShowAnimatedPath(true), 2100);
                     setTimeout(() => setShowImages(true), 1300);
                     setTimeout(() => setShowRoundedCard(true), 1600);
+                    setTimeout(() => setWelcomingAnimationComplete(true), 2950);
                 };
 
                 map.current.on('load', onLoad);
@@ -254,44 +298,8 @@ const MapContainer: React.FC = () => {
                     }
                 }, 10000);
 
-                // Handle resize events
-                const handleMapResize = () => {
-                    if (map.current) {
-                        // Update center and bounds based on new aspect ratio
-                        const newCenter = getResponsiveCenter();
-                        const newZoom = getResponsiveZoom();
-                        const newBounds = calculateBounds(newZoom);
-
-                        // Update container dimensions for mobile devices
-                        if (isMobile && mapContainer.current) {
-                            const viewport = getViewportDimensions();
-                            const mapWrapper = mapContainer.current.parentElement;
-
-                            if (mapWrapper) {
-                                mapWrapper.style.width = `${viewport.width}px`;
-                                mapWrapper.style.height = `${viewport.height}px`;
-                            }
-
-                            mapContainer.current.style.width = `${viewport.width}px`;
-                            mapContainer.current.style.height = `${viewport.height}px`;
-                        }
-
-                        map.current.resize();
-                        map.current.setCenter(newCenter);
-                        map.current.setZoom(newZoom);
-                        map.current.fitBounds(newBounds, { padding: 20, animate: false });
-                    }
-                };
-
-                window.addEventListener('resize', handleMapResize);
-                window.addEventListener('orientationchange', handleMapResize);
-                window.addEventListener('pixelRatioChanged', handleMapResize);
-
                 return () => {
                     clearTimeout(timeout);
-                    window.removeEventListener('resize', handleMapResize);
-                    window.removeEventListener('orientationchange', handleMapResize);
-                    window.removeEventListener('pixelRatioChanged', handleMapResize);
                     if (map.current) {
                         map.current.remove();
                         map.current = null;
@@ -305,7 +313,17 @@ const MapContainer: React.FC = () => {
         };
 
         const timer = setTimeout(initMap, 0);
-        return () => clearTimeout(timer);
+
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', handleMapResize);
+            window.removeEventListener('orientationchange', handleMapResize);
+            window.removeEventListener('pixelRatioChanged', handleMapResize);
+            if (map.current) {
+                map.current.remove();
+                map.current = null;
+            }
+        };
     }, [isMobile]);
 
     const handleMarkerClick = (markerId: number) => {
@@ -314,7 +332,9 @@ const MapContainer: React.FC = () => {
 
     const handleAnimationComplete = () => {
         setTargetMarkerId(null);
-    }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
+    };
+
+    const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
@@ -327,7 +347,7 @@ const MapContainer: React.FC = () => {
                 setFastAnimation(true);
                 setTimeout(() => {
                     setFastAnimation(false);
-                }, 150);
+                }, 1500);
             }
 
             setPreviousMarkerIndex(currentMarkerIndex);
@@ -373,73 +393,90 @@ const MapContainer: React.FC = () => {
         };
 
         window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [currentMarkerIndex]);
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [currentMarkerIndex]); return (
+        <>
+            <div className="map-wrapper">
+                <div ref={mapContainer} className="map-container" />
+                <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
+                    <Curve map={map.current} markers={MARKERS} />
+                </div>
+                <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
+                    <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
+                </div>
 
-    if (error) {
-        return (
-            <div className="map-container error">
-                <div className="error-message">
-                    <h2>Map Error</h2>
-                    <p>{error}</p>
-                    <p>Please check your internet connection and Mapbox token.</p>
+                <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
+                    <AnimatedPath
+                        map={map.current}
+                        markers={MARKERS}
+                        targetMarkerId={targetMarkerId}
+                        onAnimationComplete={handleAnimationComplete}
+                        onCurrentMarkerChange={handleCurrentMarkerChange}
+                    />
                 </div>
             </div>
-        );
-    } return (
-        <div className="map-wrapper">
-            {loading && (
-                <div className="loading-overlay">
-                    <div className="loading-spinner"></div>
-                    <p>Applying pixel ratio and loading map...</p>
-                </div>
-            )}
-            <div ref={mapContainer} className="map-container" />
 
-            <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
-                <Curve map={map.current} markers={MARKERS} />
-            </div>            <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
-            </div>
+            {/* UI Overlay - Outside pixelRatio-affected area */}
+            <div className="ui-overlay">
+                {/* Loading state */}
+                {loading && (
+                    <div className="loading-wrapper">
+                        <div className="loading-container">
+                            <div className="loading-spinner"></div>
+                            <p className="loading-text">Applying pixel ratio and loading map...</p>
+                        </div>
+                    </div>
+                )}
 
-            <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
-                <AnimatedPath
-                    map={map.current}
-                    markers={MARKERS}
-                    targetMarkerId={targetMarkerId}
-                    onAnimationComplete={handleAnimationComplete}
-                    onCurrentMarkerChange={handleCurrentMarkerChange}
-                />
+                {/* Error state */}
+                {error && (
+                    <div className="error-wrapper">
+                        <div className="error-container">
+                            <h2 className="error-title">Map Error</h2>
+                            <p className="error-description">{error}</p>
+                            <p className="error-help">Please check your internet connection and Mapbox token.</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Only show other UI elements when not in error state */}
+                {!error && (
+                    <>
+                        <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
+                            <Image
+                                className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 1"
+                                style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
+                            />
+                            <Image
+                                className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 2"
+                                style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
+                            />
+                            <Image
+                                className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 3"
+                                style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
+                            />
+                        </div>
+
+                        <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'} ${welcomingAnimationComplete ? 'welcome-animation-complete' : ''}`}>
+                            <RoundedCard
+                                showDebugOverlay={false}
+                                markerLocationText={currentMarkerLocation}
+                                onPreviousMarker={handlePreviousMarker}
+                                onNextMarker={handleNextMarker}
+                                canGoPrevious={canGoPrevious}
+                                canGoNext={canGoNext}
+                                fastAnimation={fastAnimation}
+                            />
+                        </div>
+                    </>
+                )}
             </div>
-            <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'}`}>
-                <RoundedCard
-                    showDebugOverlay={false}
-                    markerLocationText={currentMarkerLocation}
-                    onPreviousMarker={handlePreviousMarker}
-                    onNextMarker={handleNextMarker}
-                    canGoPrevious={canGoPrevious}
-                    canGoNext={canGoNext}
-                    fastAnimation={fastAnimation}
-                />
-            </div>
-            <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
-                <Image
-                    className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                    alt="Image 1"
-                    style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
-                />
-                <Image
-                    className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                    alt="Image 2"
-                    style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
-                />
-                <Image
-                    className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                    alt="Image 3"
-                    style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
-                />
-            </div>
-        </div>
+        </>
     );
 };
 

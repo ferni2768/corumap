@@ -4,10 +4,10 @@
     --marker-border: 1;
 }
 
-/* Invisible hitbox wrapper - double the size of visual marker */
+/* Hitbox wrapper - bigger than visual marker */
 .marker-hitbox {
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * 1vmin);
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * var(--pixel-ratio, 1) * 0.5vmin);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * var(--pixel-ratio, 1) * 0.5vmin);
     position: absolute;
     cursor: pointer;
     pointer-events: auto;
@@ -19,21 +19,21 @@
     -webkit-touch-callout: none;
 }
 
-/* Visual marker - same appearance as before */
+/* Visual marker */
 .marker-visual {
     background-color: #ff0000;
-    outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
-    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
+    outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #ffffff;
+    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #000000;
     border-radius: 50%;
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    transition: box-shadow 0.2s ease;
     pointer-events: none;
 }
 
 /* Hover effect on the hitbox affects the visual marker */
 .marker-hitbox:hover .marker-visual {
-    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
 }

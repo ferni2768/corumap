@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
-import { PixelRatioManager } from '../utils/pixelRatio';
 import '../styles/RoundedCard.css';
 
 interface RoundedCardProps {
@@ -26,7 +25,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     fastAnimation = false
 }) => {
     const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
-    const [isMobile, setIsMobile] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [currentText, setCurrentText] = useState(markerLocationText);
     const [nextText, setNextText] = useState(markerLocationText);
@@ -48,26 +46,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
-
-    useEffect(() => {
-        const updateMobileStatus = () => {
-            const pixelRatioManager = PixelRatioManager.getInstance();
-            const newIsMobile = pixelRatioManager.isMobileDevice();
-            setIsMobile(newIsMobile);
-        };
-
-        // Initial setup
-        updateMobileStatus();
-
-        // Listen for resize events
-        window.addEventListener('resize', updateMobileStatus);
-        window.addEventListener('orientationchange', updateMobileStatus);
-
-        return () => {
-            window.removeEventListener('resize', updateMobileStatus);
-            window.removeEventListener('orientationchange', updateMobileStatus);
-        };
     }, []);
 
     // Process animation queue
@@ -160,9 +138,9 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     }, []);
 
     return (
-        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}>
+        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''}`}>
             <Superellipse
-                className={`rounded-card ${className} ${!isMobile ? 'inner-scaled' : ''}`}
+                className={`rounded-card ${className}`}
                 r1={Preset.iOS.r1}
                 r2={Preset.iOS.r2}
                 style={{
@@ -192,11 +170,11 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             <div
                 className={`card-arrow card-arrow-left ${!canGoPrevious ? 'disabled' : ''}`}
                 onClick={handlePreviousClick}
-            ></div>
+            />
             <div
                 className={`card-arrow card-arrow-right ${!canGoNext ? 'disabled' : ''}`}
                 onClick={handleNextClick}
-            ></div>
+            />
         </div>
     );
 };

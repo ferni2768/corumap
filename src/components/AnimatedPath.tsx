@@ -44,7 +44,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
     const pathToFollowRef = useRef<number[]>([]);
     const isAnimatingRef = useRef<boolean>(false);
     const totalAnimationDurationRef = useRef<number>(2000);
-    const currentExactPositionRef = useRef<number>(1); // Tracks exact position as floating point marker ID
+    const currentExactPositionRef = useRef<number>(1);
+    const isResizingRef = useRef<boolean>(false);
+    const lastResizeTimeRef = useRef<number>(0);
 
     const calculateControlPoint = (
         start: CurvePoint,
@@ -234,7 +236,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         if (isAnimatingRef.current) {
             animationRef.current = requestAnimationFrame(animate);
         }
-    };    // Initialize position at first marker
+    };
+
+    // Initialize position at first marker
     useEffect(() => {
         if (!map || markers.length === 0) return;
 
@@ -258,9 +262,32 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
 
     // Handle map events
     useEffect(() => {
-        if (!map) return;
+        if (!map) return; const handleResize = () => {
+            isResizingRef.current = true;
+            lastResizeTimeRef.current = performance.now();
+
+            // Immediately update position during resize for instant response
+            if (!isAnimatingRef.current) {
+                const marker = markers.find(m => m.id === currentMarkerId);
+                if (marker) {
+                    const point = map.project(marker.coordinates);
+                    setPosition(point);
+                }
+            }
+
+            // Reset resize flag after a short delay
+            setTimeout(() => {
+                // Only reset if no recent resize events
+                if (performance.now() - lastResizeTimeRef.current >= 50) {
+                    isResizingRef.current = false;
+                }
+            }, 50);
+        };
 
         const updatePositionOnMapChange = () => {
+            // Skip position updates during resize to prevent unwanted animation
+            if (isResizingRef.current || !map) return;
+
             if (!isAnimatingRef.current) {
                 // Update position of stationary circle when map moves
                 const marker = markers.find(m => m.id === currentMarkerId);
@@ -270,11 +297,18 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
                 }
             }
         };
+        // Listen for resize events
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        window.addEventListener('pixelRatioChanged', handleResize);
+        map.on('resize', handleResize);
 
         const events = ['move', 'zoom', 'rotate', 'pitch'];
-        events.forEach(event => map.on(event, updatePositionOnMapChange));
-
-        return () => {
+        events.forEach(event => map.on(event, updatePositionOnMapChange)); return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
+            window.removeEventListener('pixelRatioChanged', handleResize);
+            map.off('resize', handleResize);
             events.forEach(event => map.off(event, updatePositionOnMapChange));
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
@@ -282,7 +316,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         };
     }, [map, markers, currentMarkerId]);
 
-    if (!isVisible) return null; return (
+    if (!isVisible) return null;
+
+    return (
         <div
             className="animated-path-circle"
             style={{

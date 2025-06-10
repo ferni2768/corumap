@@ -93,23 +93,31 @@ export class PixelRatioManager {
         // Set viewport meta
         this.ensureViewportMeta();
 
-        // Apply body styles
+        // Reset body styles for mobile
         Object.assign(document.body.style, {
             width: `${width}px`,
             height: `${height}px`,
             overflow: 'hidden',
             transform: 'none'
         });
+
+        // Reset map scaling for mobile
+        document.documentElement.style.setProperty('--map-scale', '1');
     }
 
     private applyDesktopStyles(): void {
         const scale = 1 / this.pixelRatio;
+
+        // Reset body styles
         Object.assign(document.body.style, {
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            width: `${100 * this.pixelRatio}%`,
-            height: `${100 * this.pixelRatio}%`
+            transform: 'none',
+            transformOrigin: 'initial',
+            width: '100%',
+            height: '100%'
         });
+
+        // Apply scaling to map wrapper via CSS custom properties
+        document.documentElement.style.setProperty('--map-scale', scale.toString());
     }
 
     private ensureViewportMeta(): void {

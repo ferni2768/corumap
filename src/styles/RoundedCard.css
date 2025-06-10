@@ -1,20 +1,18 @@
 :root {
-    --card-blur-amount: 15;
-    --card-padding: 4;
-    --card-heading-size: 15;
-    --card-text-size: 13;
-    --card-shadow-size: 2;
-    --card-arrow-margin: 10%;
+    --card-blur-amount: 1.5vmax;
+    --card-padding: 1dvh;
+    --card-shadow-size: 0.2dvh;
+    --card-arrow-margin: 1.5vmin;
 }
 
 .rounded-card {
     /* Glassmorphism effect */
     background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(calc(var(--card-blur-amount) * var(--marker-mobile-scale, 1) * 1vmin));
-    -webkit-backdrop-filter: blur(calc(var(--card-blur-amount) * var(--marker-mobile-scale, 1) * 1vmin));
+    backdrop-filter: blur(var(--card-blur-amount));
+    -webkit-backdrop-filter: blur(var(--card-blur-amount));
 
     /* Content styling */
-    padding: calc(var(--card-padding) * var(--marker-mobile-scale, 1) * 1vmin);
+    padding: var(--card-padding);
     color: white;
     display: flex;
     align-items: center;
@@ -36,21 +34,13 @@
 
 .rounded-card-container {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    height: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    width: 80dvw;
+    height: 20dvh;
+    top: 40dvh;
+    left: 10dvw;
     z-index: 9999;
     padding: 0;
     margin: 0;
-}
-
-.rounded-card-container.mobile-position {
-    transform: translate(-50%, 0%) scale(1);
-}
-
-.rounded-card-container.desktop-scaled {
-    transform: translate(-50%, -33%) scale(0.333);
 }
 
 .rounded-card-container.debug {
@@ -62,14 +52,14 @@
 .card-content {
     position: absolute;
     top: 0;
-    left: 20%;
-    width: 60%;
+    left: 17.5%;
+    width: 65%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: calc(var(--card-text-size) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3vmin);
+    font-size: 4.5vmin;
     font-weight: 700;
     line-height: 1.2;
     z-index: 101;
@@ -154,70 +144,71 @@
 /* Fast animations for long jumps (30% faster) */
 .card-text-primary.fast-animation,
 .card-text-secondary.fast-animation {
-    transition: transform 0.1225s ease, opacity 0.06125s ease;
+    transition: transform 0.1s ease, opacity 0.05s ease;
 }
 
 .card-text-primary.fast-animation.active,
 .card-text-secondary.fast-animation.active {
-    transition: transform 0.1225s ease, opacity 0.06125s ease 0.06125s;
+    transition: transform 0.1s ease, opacity 0.05s ease 0.05s;
 }
 
 .card-text-primary.fast-animation.inactive,
 .card-text-secondary.fast-animation.inactive {
-    transition: transform 0.1225s ease, opacity 0.06125s ease;
+    transition: transform 0.1s ease, opacity 0.05s ease;
 }
 
 .card-text-primary.fast-animation.animate-forward.active,
 .card-text-secondary.fast-animation.animate-forward.active {
-    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+    transition: transform 0.1s ease-in, opacity 0.05s ease-in;
 }
 
 .card-text-primary.fast-animation.animate-forward.inactive,
 .card-text-secondary.fast-animation.animate-forward.inactive {
-    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
 }
 
 .card-text-primary.fast-animation.animate-backward.active,
 .card-text-secondary.fast-animation.animate-backward.active {
-    transition: transform 0.1225s ease-in, opacity 0.06125s ease-in;
+    transition: transform 0.1s ease-in, opacity 0.05s ease-in;
 }
 
 .card-text-primary.fast-animation.animate-backward.inactive,
 .card-text-secondary.fast-animation.animate-backward.inactive {
-    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
 }
 
 .card-text-primary.fast-animation.animate-backward.inactive {
-    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
 }
 
 .card-text-secondary.fast-animation.animate-backward.inactive {
-    transition: transform 0.1225s ease-out, opacity 0.06125s ease-out 0.06125s;
+    transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
 }
 
 .card-arrow {
     position: absolute;
     top: 50%;
-    width: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(4 * var(--marker-mobile-scale, 1) * 1vmin);
-    transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 20));
+    width: 10vmin;
+    height: 10vmin;
+    transform: translateY(-50%);
     z-index: 102;
     pointer-events: auto;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    transition: transform 0.1s, filter 0.1s;
 }
 
 .card-arrow:hover {
     cursor: pointer;
-    transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 25));
+    transform: translateY(-50%) scale(1.25);
     filter: brightness(0.9);
     transition: transform 0.1s;
     opacity: 1;
 }
 
 .card-arrow:active {
-    transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 22));
+    transform: translateY(-50%) scale(1.1);
     transition: transform 0.05s;
 }
 
@@ -229,7 +220,7 @@
 }
 
 .card-arrow.disabled:hover {
-    transform: translateY(-50%) scale(calc(6 + var(--marker-mobile-scale, 1) * 20));
+    transform: translateY(-50%) scale(1);
 }
 
 .card-arrow-left {
@@ -248,22 +239,52 @@
     background-position: center;
 }
 
+@media (max-aspect-ratio: 4/5) {
+
+    /* Portrait mode narrow */
+    .card-content {
+        font-size: 4.5vmin;
+    }
+
+    .card-arrow {
+        width: 10vmin;
+        height: 10vmin;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) and (min-aspect-ratio: 4/5) {
+
+    /* Portrait mode between 4/5 and 1/1 */
+    .card-content {
+        font-size: 3.5vmin;
+    }
+
+    .card-arrow {
+        width: 8vmin;
+        height: 8vmin;
+    }
+}
+
+@media (max-aspect-ratio: 3/2) and (min-aspect-ratio: 1/1) {
+
+    /* Portrait to landscape transition */
+    .card-content {
+        font-size: 2.75vmin;
+    }
+
+    .card-arrow {
+        width: 7vmin;
+        height: 7vmin;
+    }
+}
+
 @media (max-aspect-ratio: 3/2) {
 
     /* Portrait mode wide */
     .rounded-card-container {
-        top: 85%;
-        left: 50%;
-        width: calc(50% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    }
-
-    .rounded-card-container.mobile-position {
-        transform: translateX(-50%) scale(1);
-    }
-
-    .rounded-card-container.desktop-scaled {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
+        left: 25dvw;
+        width: 50dvw;
+        height: 10dvh;
     }
 }
 
@@ -271,18 +292,9 @@
 
     /* Portrait mode square */
     .rounded-card-container {
-        top: 85%;
-        left: 50%;
-        width: calc(80% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    }
-
-    .rounded-card-container.mobile-position {
-        transform: translateX(-50%) scale(1);
-    }
-
-    .rounded-card-container.desktop-scaled {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
+        left: 10dvw;
+        width: 80dvw;
+        height: 10dvh;
     }
 }
 
@@ -290,21 +302,17 @@
 
     /* Landscape mode */
     .rounded-card-container {
-        top: 72%;
-        left: 62%;
-        width: calc(33% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(18% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+        left: 63dvw;
+        width: 33dvw;
+        height: 18dvh;
     }
 
-    .rounded-card-container.mobile-position {
-        transform: translateY(-50%) scale(1);
+    .card-content {
+        font-size: 4.5vmin;
     }
 
-    .rounded-card-container.desktop-scaled {
-        transform: translateY(-50%) translateX(-33%) scale(0.333);
+    .card-arrow {
+        width: 10vmin;
+        height: 10vmin;
     }
-}
-
-.rounded-card.inner-scaled {
-    transform: scale(3.075);
 }

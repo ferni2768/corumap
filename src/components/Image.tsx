@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
-import { PixelRatioManager } from '../utils/pixelRatio';
 import '../styles/Image.css';
 
 interface ImageProps {
@@ -17,7 +16,6 @@ const Image: React.FC<ImageProps> = ({
     alt = 'Image placeholder',
     style
 }) => {
-    const [isMobile, setIsMobile] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [animationState, setAnimationState] = useState<'idle' | 'expanding' | 'collapsing' | 'preparing'>('idle');
     const [allowTransitions, setAllowTransitions] = useState(true);
@@ -26,13 +24,9 @@ const Image: React.FC<ImageProps> = ({
     const transitionTimeoutRef = useRef<NodeJS.Timeout>();
 
     useEffect(() => {
-        const updateMobileStatus = () => {
+        const handleResize = () => {
             // Temporarily disable transitions during resize/orientation change
             setAllowTransitions(false);
-
-            const pixelRatioManager = PixelRatioManager.getInstance();
-            const newIsMobile = pixelRatioManager.isMobileDevice();
-            setIsMobile(newIsMobile);
 
             // Re-enable transitions after a short delay to prevent animation during resize
             if (transitionTimeoutRef.current) {
@@ -43,16 +37,11 @@ const Image: React.FC<ImageProps> = ({
             }, 100);
         };
 
-        // Initial setup
-        updateMobileStatus();
-
         // Listen for resize events
-        window.addEventListener('resize', updateMobileStatus);
-        window.addEventListener('orientationchange', updateMobileStatus);
-
-        return () => {
-            window.removeEventListener('resize', updateMobileStatus);
-            window.removeEventListener('orientationchange', updateMobileStatus);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize); return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
             if (transitionTimeoutRef.current) {
                 clearTimeout(transitionTimeoutRef.current);
             }
@@ -243,7 +232,7 @@ const Image: React.FC<ImageProps> = ({
                 style={style}
             >
                 <Superellipse
-                    className={`image-component ${!isMobile ? 'inner-scaled' : ''}`}
+                    className={`image-component`}
                     r1={Preset.iOS.r1}
                     r2={Preset.iOS.r2}
                     style={{
