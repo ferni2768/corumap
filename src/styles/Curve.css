@@ -24,6 +24,30 @@
     transition: opacity 0.2s ease, stroke-width 0.2s ease;
 }
 
+/* Drawing animation for curve paths */
+.curve-wrapper.fade-out .curve-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+}
+
+.curve-wrapper.fade-in .curve-path {
+    stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * 1vmin);
+    stroke-dashoffset: 0;
+    animation: drawCurve 2.3s cubic-bezier(0.0001, 0.98, 0.0001, 1) forwards;
+}
+
+@keyframes drawCurve {
+    from {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+    }
+
+    to {
+        stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * 1vmin);
+        stroke-dashoffset: 0;
+    }
+}
+
 .curve-path:hover {
     opacity: 1;
     stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);

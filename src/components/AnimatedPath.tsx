@@ -282,15 +282,12 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         };
     }, [map, markers, currentMarkerId]);
 
-    if (!isVisible) return null;
-
-    return (
+    if (!isVisible) return null; return (
         <div
             className="animated-path-circle"
             style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                transform: 'translate(-50%, -50%)'
+                left: `${Math.round(position.x)}px`,
+                top: `${Math.round(position.y)}px`
             }}
         />
     );

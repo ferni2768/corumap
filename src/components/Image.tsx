@@ -8,12 +8,14 @@ interface ImageProps {
     className?: string;
     src?: string;
     alt?: string;
+    style?: React.CSSProperties;
 }
 
 const Image: React.FC<ImageProps> = ({
     className = '',
     src,
-    alt = 'Image placeholder'
+    alt = 'Image placeholder',
+    style
 }) => {
     const [isMobile, setIsMobile] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -238,6 +240,7 @@ const Image: React.FC<ImageProps> = ({
                 ref={wrapperRef}
                 className={getWrapperClasses()}
                 onClick={handleImageClick}
+                style={style}
             >
                 <Superellipse
                     className={`image-component ${!isMobile ? 'inner-scaled' : ''}`}

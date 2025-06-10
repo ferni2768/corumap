@@ -23,6 +23,24 @@ interface MarkerPosition {
 
 const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
     const [markerPositions, setMarkerPositions] = useState<MarkerPosition[]>([]);
+    const [organicDelays] = useState<Map<number, number>>(() => {
+        // Generate organic random delays once when component mounts
+        const delayMap = new Map<number, number>();
+        const baseInterval = 125; // Base interval in milliseconds
+
+        markers.forEach((marker, index) => {
+            // Calculate base delay for this marker
+            const baseDelay = index * baseInterval;
+
+            // Add more varied random variance (±100ms) for organic feel
+            const variance = Math.random() * 100;
+            const organicDelay = Math.max(0, baseDelay + variance);
+
+            delayMap.set(marker.id, organicDelay);
+        });
+
+        return delayMap;
+    });
 
     const updateMarkerPositions = () => {
         if (!map) return;
@@ -56,9 +74,9 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
 
     const handleMarkerClick = (markerId: number) => {
         onMarkerClick?.(markerId);
-    };
+    }; if (markerPositions.length === 0) return null;
 
-    if (markerPositions.length === 0) return null; return (
+    return (
         <>
             {markerPositions.map(marker => (
                 <div
@@ -67,8 +85,9 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
                     style={{
                         left: `${marker.x}px`,
                         top: `${marker.y}px`,
-                        transform: 'translate(-50%, -50%)'
-                    }}
+                        transform: 'translate(-50%, -50%)',
+                        '--organic-delay': `${organicDelays.get(marker.id) || 0}ms`
+                    } as React.CSSProperties}
                     title={marker.name}
                     onClick={() => handleMarkerClick(marker.id)}
                 >

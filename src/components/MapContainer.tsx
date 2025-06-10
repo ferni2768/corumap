@@ -74,12 +74,34 @@ const MARKERS = [
 const MapContainer: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
-    const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
-    const [isMobile, setIsMobile] = useState(false); const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null); const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
     const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
     const [previousMarkerIndex, setPreviousMarkerIndex] = useState<number>(0); // Track previous marker index for jump detection
     const [fastAnimation, setFastAnimation] = useState<boolean>(false); // Fast animation mode for long jumps
-    const [hasExpandedImage, setHasExpandedImage] = useState(false);// Initialize device info
+    const [hasExpandedImage, setHasExpandedImage] = useState(false);    // Animation states
+    const [showRoundedCard, setShowRoundedCard] = useState(false);
+    const [showImages, setShowImages] = useState(false);
+    const [showMarkers, setShowMarkers] = useState(false);
+    const [showCurve, setShowCurve] = useState(false);
+    const [showAnimatedPath, setShowAnimatedPath] = useState(false);
+
+    // Generate organic random delays for images
+    const [organicImageDelays] = useState(() => {
+        const baseDelay = 500; // Base delay in milliseconds (0.5s)
+        const images = ['image-1', 'image-2', 'image-3'];
+
+        return images.map((_,) => {
+            // Add random variance (±100ms) for organic feel
+            const variance = (Math.random() - 0.5) * 200; // ±100ms
+            const organicDelay = Math.max(0, baseDelay + variance);
+            return organicDelay;
+        });
+    });
+
     useEffect(() => {
         const pixelRatioManager = PixelRatioManager.getInstance();
         setIsMobile(pixelRatioManager.isMobileDevice());
@@ -197,6 +219,17 @@ const MapContainer: React.FC = () => {
                     map.current.keyboard.disable();
                     map.current.doubleClickZoom.disable();
                     map.current.touchZoomRotate.disable();
+
+                    // Start the welcoming animation sequence
+                    startWelcomingAnimation();
+                };
+
+                const startWelcomingAnimation = () => {
+                    setTimeout(() => setShowMarkers(true), 200);
+                    setTimeout(() => setShowCurve(true), 1500);
+                    setTimeout(() => setShowAnimatedPath(true), 2100);
+                    setTimeout(() => setShowImages(true), 1300);
+                    setTimeout(() => setShowRoundedCard(true), 1600);
                 };
 
                 map.current.on('load', onLoad);
@@ -353,47 +386,59 @@ const MapContainer: React.FC = () => {
                 </div>
             </div>
         );
-    }
-
-    return (
+    } return (
         <div className="map-wrapper">
             {loading && (
                 <div className="loading-overlay">
                     <div className="loading-spinner"></div>
-                    <p>Loading A Coruña...</p>
+                    <p>Applying pixel ratio and loading map...</p>
                 </div>
             )}
             <div ref={mapContainer} className="map-container" />
-            <Curve map={map.current} markers={MARKERS} />
-            <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
-            <AnimatedPath
-                map={map.current}
-                markers={MARKERS}
-                targetMarkerId={targetMarkerId}
-                onAnimationComplete={handleAnimationComplete}
-                onCurrentMarkerChange={handleCurrentMarkerChange}
-            />
-            <RoundedCard
-                showDebugOverlay={false}
-                markerLocationText={currentMarkerLocation}
-                onPreviousMarker={handlePreviousMarker}
-                onNextMarker={handleNextMarker}
-                canGoPrevious={canGoPrevious}
-                canGoNext={canGoNext}
-                fastAnimation={fastAnimation}
-            />
-            <Image
-                className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                alt="Image 1"
-            />
-            <Image
-                className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                alt="Image 2"
-            />
-            <Image
-                className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
-                alt="Image 3"
-            />
+
+            <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
+                <Curve map={map.current} markers={MARKERS} />
+            </div>            <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
+                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
+            </div>
+
+            <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
+                <AnimatedPath
+                    map={map.current}
+                    markers={MARKERS}
+                    targetMarkerId={targetMarkerId}
+                    onAnimationComplete={handleAnimationComplete}
+                    onCurrentMarkerChange={handleCurrentMarkerChange}
+                />
+            </div>
+            <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'}`}>
+                <RoundedCard
+                    showDebugOverlay={false}
+                    markerLocationText={currentMarkerLocation}
+                    onPreviousMarker={handlePreviousMarker}
+                    onNextMarker={handleNextMarker}
+                    canGoPrevious={canGoPrevious}
+                    canGoNext={canGoNext}
+                    fastAnimation={fastAnimation}
+                />
+            </div>
+            <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
+                <Image
+                    className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                    alt="Image 1"
+                    style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
+                />
+                <Image
+                    className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                    alt="Image 2"
+                    style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
+                />
+                <Image
+                    className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}
+                    alt="Image 3"
+                    style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
+                />
+            </div>
         </div>
     );
 };
