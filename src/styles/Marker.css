@@ -4,10 +4,10 @@
     --marker-border: 1;
 }
 
-/* Invisible hitbox wrapper - double the size of visual marker */
+/* Hitbox wrapper - bigger than visual marker */
 .marker-hitbox {
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * 1vmin);
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * var(--pixel-ratio, 1) * 0.5vmin);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * var(--pixel-ratio, 1) * 0.5vmin);
     position: absolute;
     cursor: pointer;
     pointer-events: auto;
@@ -17,23 +17,132 @@
     justify-content: center;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
-/* Visual marker - same appearance as before */
+/* Visual marker */
 .marker-visual {
     background-color: #ff0000;
-    outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * 1vmin) solid #ffffff;
-    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * 1vmin) solid #000000;
+    outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #ffffff;
+    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #000000;
     border-radius: 50%;
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1vmin);
-    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    transition: width 0.5s ease, height 0.5s ease, box-shadow 0.2s ease, filter 0.5s ease, background-color 0.5s ease;
     pointer-events: none;
+    position: relative;
 }
 
-/* Hover effect on the hitbox affects the visual marker */
-.marker-hitbox:hover .marker-visual {
-    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
-    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
-    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+.marker-hitbox.map-moving .marker-visual {
+    transition: none !important;
+}
+
+/* Hover effect only for devices that support hovering (desktop/PC) */
+@media (hover: hover) and (pointer: fine) {
+    .marker-hitbox:hover .marker-visual {
+        width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+        height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+        transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+    }
+}
+
+/* Active/tap effect for all devices */
+.marker-hitbox:active .marker-visual,
+.marker-hitbox.active .marker-visual {
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.25 * var(--pixel-ratio, 1) * 1vmin/3);
+    filter: hue-rotate(40deg) saturate(3) brightness(1.7);
+    background-color: #ff3300;
+    transition: width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Brightness effect using pseudo-element overlay */
+.marker-hitbox:active .marker-visual::before,
+.marker-hitbox.active .marker-visual::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(255, 60, 0);
+    border-radius: 50%;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+/* When not active, ensure proper transitions back to normal */
+.marker-hitbox:not(:active):not(.active) .marker-visual {
+    transition: width 0.5s ease, height 0.5s ease, box-shadow 0.2s ease, filter 0.5s ease, background-color 0.5s ease;
+}
+
+/* Hide overlay when not active */
+.marker-hitbox:not(:active):not(.active) .marker-visual::before {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Arrow navigation animation - two-phase effect */
+.marker-hitbox.arrow-triggered .marker-visual {
+    animation: arrow-marker-pulse 0.1s ease-in-out;
+}
+
+@keyframes arrow-marker-pulse {
+    0% {
+        width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+        height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+        filter: none;
+        background-color: #ff0000;
+    }
+
+    25% {
+        width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.175 * var(--pixel-ratio, 1) * 1vmin/3);
+        height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 1.175 * var(--pixel-ratio, 1) * 1vmin/3);
+        filter: hue-rotate(35deg) saturate(3) brightness(1.7);
+        background-color: #ff3300;
+    }
+
+    100% {
+        width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+        height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+        filter: none;
+        background-color: #ff0000;
+    }
+}
+
+.marker-hitbox.arrow-triggered .marker-visual::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgb(255, 60, 0);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: arrow-marker-overlay-pulse 0.1s ease-in-out;
+}
+
+@keyframes arrow-marker-overlay-pulse {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Prevent welcoming animation from interfering with arrow animation */
+.marker-wrapper.scale-in .marker-hitbox.arrow-triggered .marker-visual {
+    animation-name: arrow-marker-pulse !important;
+    animation-delay: 0s !important;
+    animation-duration: 0.6s !important;
+    animation-timing-function: ease-in-out !important;
+    animation-fill-mode: none !important;
 }

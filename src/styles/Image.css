@@ -1,31 +1,51 @@
 :root {
-    --image-padding: 2;
-    --image-font-size: 6;
-    --image-expanded-height: 90;
-    --image-max-width: 90;
-    --image-max-height: 85;
+    --image-padding: 1dvh;
+    --image-font-size: 1dvh;
+    --image-expanded-height: 90dvh;
+    --image-max-width: 90dvw;
+    --image-max-height: 85dvh;
 
     /* Animation custom properties */
     --image-initial-x: 0;
     --image-initial-y: 0;
     --image-initial-width: 0;
     --image-initial-height: 0;
-    --image-target-x: 50vw;
-    --image-target-y: 50vh;
+    --image-target-x: 50dvw;
+    --image-target-y: 50dvh;
 }
 
 .image-wrapper {
-    position: relative;
+    position: fixed;
+    width: 10dvw;
+    height: 35dvh;
     box-sizing: border-box;
     margin: 0;
     cursor: pointer;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     transform-origin: center center;
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    z-index: 10001;
+}
+
+/* Default landscape positioning */
+.image-wrapper.image-1 {
+    top: 39dvh;
+    left: 62dvw;
+}
+
+.image-wrapper.image-2 {
+    top: 39dvh;
+    left: 74dvw;
+}
+
+.image-wrapper.image-3 {
+    top: 39dvh;
+    left: 86dvw;
 }
 
 /* Disable transitions during resize/orientation changes */
@@ -38,23 +58,25 @@
 }
 
 .image-component {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 1);
 
     /* Content styling */
-    padding: calc(var(--image-padding) * var(--marker-mobile-scale, 1) * 1vmin);
+    padding: var(--image-padding);
     color: #333;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: calc(var(--image-font-size) * var(--marker-mobile-scale, 1) * 1vmin);
+    font-size: var(--image-font-size);
     pointer-events: none;
     z-index: 98;
     box-sizing: border-box;
     margin: 0;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
+    /* Hardware acceleration */
+    will-change: transform;
 }
 
 /* Force Superellipse to fill container */
@@ -68,8 +90,8 @@
 
 .image-content {
     text-align: center;
-    width: calc(100% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
-    height: calc(100% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
+    width: 100% !important;
+    height: 100% !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -89,35 +111,30 @@
 .image-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #999;
-    font-size: calc(var(--image-font-size) * var(--marker-mobile-scale, 1) * 1vmin);
+    font-size: var(--image-font-size);
     border-radius: inherit;
     position: relative;
     will-change: auto;
     backface-visibility: hidden;
 }
 
-.image-component.inner-scaled {
-    transform: scale(3.075);
-}
-
-/* Image expansion overlay */
 .image-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: calc(100% * var(--pixel-ratio, 1));
-    height: calc(100% * var(--pixel-ratio, 1));
+    width: 100dvw;
+    height: 100dvh;
     background: rgba(0, 0, 0, 0.7);
-    z-index: 10000;
+    z-index: 10002;
     cursor: pointer;
-    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     will-change: opacity;
     backface-visibility: hidden;
+    transform: translateZ(0);
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
 }
@@ -134,9 +151,10 @@
 
 /* Optimized animation states */
 .image-wrapper.animating {
-    z-index: 10002 !important;
-    will-change: top, left, width, height, transform;
+    z-index: 10003 !important;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
 /* Pre-expansion state - prepare for animation */
@@ -146,56 +164,54 @@
     left: var(--image-initial-x);
     width: var(--image-initial-width);
     height: var(--image-initial-height);
-    z-index: 10002 !important;
-    transform: translate(0, 0) !important;
-    will-change: top, left, width, height, transform;
+    z-index: 10003 !important;
+    transform: translateZ(0) !important;
+    will-change: top, left, width, height;
     contain: layout;
 }
 
-/* Expanding animation */
+/* Expanding animation with hardware acceleration */
 .image-wrapper.expanding {
     position: fixed !important;
-    z-index: 10002 !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    will-change: top, left, width, height, transform;
+    z-index: 10003 !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
-/* Base for expanded state */
+/* Base for expanded state with hardware acceleration */
 .image-wrapper.expanded {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    width: calc(var(--image-expanded-height) * 9 / 16 * 1dvh * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3) !important;
-    height: calc(var(--image-expanded-height) * 1dvh * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1) * var(--marker-mobile-scale, 1) * 3) !important;
-    transform: translate(-50%, -50%) !important;
-    z-index: 10002 !important;
+    width: calc((9 / 16) * 85dvh) !important;
+    height: 85dvh !important;
+    transform: translate(-50%, -50%) translateZ(0) !important;
+    z-index: 10003 !important;
     margin: 0 !important;
     padding: 0 !important;
-    max-width: calc(var(--image-max-width) * 1% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
-    max-height: calc(var(--image-max-height) * 1% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1)) !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    max-width: 90vw !important;
+    max-height: none !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: auto;
     contain: layout;
 }
 
-/* Collapsing state */
+/* Collapsing state with hardware acceleration */
 .image-wrapper.collapsing {
     position: fixed !important;
-    z-index: 10002 !important;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    will-change: top, left, width, height, transform;
+    z-index: 10003 !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    will-change: top, left, width, height;
     contain: layout;
+    transform: translateZ(0);
 }
 
 .image-wrapper.expanded .image-component {
     pointer-events: auto;
-    transform: none !important;
+    transform: translateZ(0) !important;
     will-change: auto;
-}
-
-.image-wrapper.expanded .image-component.inner-scaled {
-    transform: none !important;
 }
 
 /* Content for each image */
@@ -209,4 +225,154 @@
 
 .image-wrapper.image-3 .image-placeholder::before {
     content: "🎨 Image 3";
+}
+
+/* Responsive positioning  */
+@media (min-aspect-ratio: 3/2) {
+
+    /* Landscape mode short */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 25dvh;
+        width: 11dvw;
+        height: 35dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 63dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 74.5dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 86dvw;
+    }
+}
+
+@media (min-aspect-ratio: 5/2) {
+
+    /* Landscape mode very short */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 15dvh;
+        width: 11dvw;
+        height: 45dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 63dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 74.5dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 86dvw;
+    }
+}
+
+@media (max-aspect-ratio: 16/9) {
+
+    /* Landscape mode tall */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 30dvh;
+        width: 11dvw;
+        height: 30dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 63dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 74.5dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 86dvw;
+    }
+}
+
+@media (max-aspect-ratio: 3/2) {
+
+    /* Portrait mode wide */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 60dvh;
+        width: 13dvw;
+        height: 21dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 29.5dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 43.5dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 57.5dvw;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+
+    /* Portrait mode square */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 61dvh;
+        width: 20dvw;
+        height: 21dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 18dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 40dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 62dvw;
+    }
+}
+
+@media (max-aspect-ratio: 9/16) {
+
+    /* Thin portrait mode */
+    .image-wrapper.image-1,
+    .image-wrapper.image-2,
+    .image-wrapper.image-3 {
+        top: 56dvh;
+        width: 25dvw;
+        height: 21dvh;
+    }
+
+    .image-wrapper.image-1 {
+        left: 10dvw;
+    }
+
+    .image-wrapper.image-2 {
+        left: 37.5dvw;
+    }
+
+    .image-wrapper.image-3 {
+        left: 65dvw;
+    }
+}
+
+/* Non-expanded images stay below overlay when another image is expanded */
+body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsing):not(.preparing-expand) {
+    z-index: 10000 !important;
 }

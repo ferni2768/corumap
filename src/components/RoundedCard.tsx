@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
-import { PixelRatioManager } from '../utils/pixelRatio';
 import '../styles/RoundedCard.css';
 
 interface RoundedCardProps {
@@ -13,6 +12,7 @@ interface RoundedCardProps {
     canGoPrevious?: boolean;
     canGoNext?: boolean;
     fastAnimation?: boolean;
+    externalAnimationDirection?: 'forward' | 'backward';
 }
 
 const RoundedCard: React.FC<RoundedCardProps> = ({
@@ -23,10 +23,10 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     onNextMarker,
     canGoPrevious = false,
     canGoNext = false,
-    fastAnimation = false
+    fastAnimation = false,
+    externalAnimationDirection
 }) => {
     const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
-    const [isMobile, setIsMobile] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
     const [currentText, setCurrentText] = useState(markerLocationText);
     const [nextText, setNextText] = useState(markerLocationText);
@@ -48,26 +48,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
 
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
-
-    useEffect(() => {
-        const updateMobileStatus = () => {
-            const pixelRatioManager = PixelRatioManager.getInstance();
-            const newIsMobile = pixelRatioManager.isMobileDevice();
-            setIsMobile(newIsMobile);
-        };
-
-        // Initial setup
-        updateMobileStatus();
-
-        // Listen for resize events
-        window.addEventListener('resize', updateMobileStatus);
-        window.addEventListener('orientationchange', updateMobileStatus);
-
-        return () => {
-            window.removeEventListener('resize', updateMobileStatus);
-            window.removeEventListener('orientationchange', updateMobileStatus);
-        };
     }, []);
 
     // Process animation queue
@@ -97,9 +77,12 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     useEffect(() => {
         if (markerLocationText === previousTextRef.current) return;
 
+        // Use external direction if provided, otherwise use the pending direction
+        const direction = externalAnimationDirection || pendingDirectionRef.current;
+
         const newAnimation = {
             text: markerLocationText,
-            direction: pendingDirectionRef.current
+            direction: direction
         };
 
         if (isAnimating) {
@@ -115,7 +98,7 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             animationQueueRef.current = [newAnimation];
             processQueue();
         }
-    }, [markerLocationText, isAnimating]);
+    }, [markerLocationText, isAnimating, externalAnimationDirection]);
 
     // Handle animation completion
     const handleAnimationEnd = () => {
@@ -160,9 +143,9 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     }, []);
 
     return (
-        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''} ${!isMobile ? 'desktop-scaled' : 'mobile-position'}`}>
+        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''}`}>
             <Superellipse
-                className={`rounded-card ${className} ${!isMobile ? 'inner-scaled' : ''}`}
+                className={`rounded-card ${className}`}
                 r1={Preset.iOS.r1}
                 r2={Preset.iOS.r2}
                 style={{
@@ -175,14 +158,14 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             />
             <div className="card-content">
                 <div
-                    className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''}`}
+                    className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && !primaryIsActive ? 'backward-start' : ''}`}
                     data-positioned={isPositioned}
                     onTransitionEnd={primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {primaryIsActive ? currentText : nextText}
                 </div>
                 <div
-                    className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''}`}
+                    className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && primaryIsActive ? 'backward-start' : ''}`}
                     data-positioned={isPositioned}
                     onTransitionEnd={!primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
@@ -192,11 +175,11 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             <div
                 className={`card-arrow card-arrow-left ${!canGoPrevious ? 'disabled' : ''}`}
                 onClick={handlePreviousClick}
-            ></div>
+            />
             <div
                 className={`card-arrow card-arrow-right ${!canGoNext ? 'disabled' : ''}`}
                 onClick={handleNextClick}
-            ></div>
+            />
         </div>
     );
 };

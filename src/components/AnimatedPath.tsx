@@ -14,6 +14,7 @@ interface AnimatedPathProps {
     targetMarkerId: number | null;
     onAnimationComplete?: () => void;
     onCurrentMarkerChange?: (markerId: number, markerName: string) => void;
+    isMapMoving?: boolean;
 }
 
 interface CurvePoint {
@@ -34,7 +35,7 @@ const CURVE_CONTROL_POINTS = [
     { cp1: { x: 0.2, y: 0.3 }, cp2: { x: 0.6, y: -0.5 } }                               // 9->10
 ];
 
-const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange }) => {
+const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange, isMapMoving }) => {
     const [position, setPosition] = useState<CurvePoint>({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [currentMarkerId, setCurrentMarkerId] = useState<number>(1); // Start at first marker
@@ -44,7 +45,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
     const pathToFollowRef = useRef<number[]>([]);
     const isAnimatingRef = useRef<boolean>(false);
     const totalAnimationDurationRef = useRef<number>(2000);
-    const currentExactPositionRef = useRef<number>(1); // Tracks exact position as floating point marker ID
+    const currentExactPositionRef = useRef<number>(1);
+    const isResizingRef = useRef<boolean>(false);
+    const lastResizeTimeRef = useRef<number>(0);
 
     const calculateControlPoint = (
         start: CurvePoint,
@@ -92,6 +95,12 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         // Handle fractional starting positions
         const startMarkerId = Math.floor(from);
         const endMarkerId = to;
+
+        // If we're between markers and want to go to the lower marker, 
+        // we need to include the current segment
+        if (startMarkerId === endMarkerId && from > startMarkerId) {
+            return [Math.ceil(from), endMarkerId];
+        }
 
         if (startMarkerId === endMarkerId) return [];
 
@@ -177,7 +186,6 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         const targetPosition = path[path.length - 1];
         const currentPosition = animationStartPosition + (targetPosition - animationStartPosition) * totalProgress;
         currentExactPositionRef.current = currentPosition;
-        // Handle forward vs backward travel differently for optimal responsiveness
         const startPosition = pathToFollowRef.current[0];
         const endPosition = pathToFollowRef.current[pathToFollowRef.current.length - 1];
         const isForwardTravel = endPosition > startPosition;
@@ -229,7 +237,9 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         if (isAnimatingRef.current) {
             animationRef.current = requestAnimationFrame(animate);
         }
-    };    // Initialize position at first marker
+    };
+
+    // Initialize position at first marker
     useEffect(() => {
         if (!map || markers.length === 0) return;
 
@@ -253,9 +263,32 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
 
     // Handle map events
     useEffect(() => {
-        if (!map) return;
+        if (!map) return; const handleResize = () => {
+            isResizingRef.current = true;
+            lastResizeTimeRef.current = performance.now();
+
+            // Immediately update position during resize for instant response
+            if (!isAnimatingRef.current) {
+                const marker = markers.find(m => m.id === currentMarkerId);
+                if (marker) {
+                    const point = map.project(marker.coordinates);
+                    setPosition(point);
+                }
+            }
+
+            // Reset resize flag after a short delay
+            setTimeout(() => {
+                // Only reset if no recent resize events
+                if (performance.now() - lastResizeTimeRef.current >= 50) {
+                    isResizingRef.current = false;
+                }
+            }, 50);
+        };
 
         const updatePositionOnMapChange = () => {
+            // Skip position updates during resize to prevent unwanted animation
+            if (isResizingRef.current || !map) return;
+
             if (!isAnimatingRef.current) {
                 // Update position of stationary circle when map moves
                 const marker = markers.find(m => m.id === currentMarkerId);
@@ -265,11 +298,18 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
                 }
             }
         };
+        // Listen for resize events
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize);
+        window.addEventListener('pixelRatioChanged', handleResize);
+        map.on('resize', handleResize);
 
         const events = ['move', 'zoom', 'rotate', 'pitch'];
-        events.forEach(event => map.on(event, updatePositionOnMapChange));
-
-        return () => {
+        events.forEach(event => map.on(event, updatePositionOnMapChange)); return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
+            window.removeEventListener('pixelRatioChanged', handleResize);
+            map.off('resize', handleResize);
             events.forEach(event => map.off(event, updatePositionOnMapChange));
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
@@ -281,11 +321,10 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
 
     return (
         <div
-            className="animated-path-circle"
+            className={`animated-path-circle ${isMapMoving ? 'map-moving' : ''}`}
             style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                transform: 'translate(-50%, -50%)'
+                left: `${Math.round(position.x)}px`,
+                top: `${Math.round(position.y)}px`
             }}
         />
     );

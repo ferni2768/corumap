@@ -1,34 +1,32 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
-import { PixelRatioManager } from '../utils/pixelRatio';
 import '../styles/Image.css';
 
 interface ImageProps {
     className?: string;
     src?: string;
     alt?: string;
+    style?: React.CSSProperties;
 }
 
 const Image: React.FC<ImageProps> = ({
     className = '',
     src,
-    alt = 'Image placeholder'
+    alt = 'Image placeholder',
+    style
 }) => {
-    const [isMobile, setIsMobile] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [animationState, setAnimationState] = useState<'idle' | 'expanding' | 'collapsing' | 'preparing'>('idle');
     const [allowTransitions, setAllowTransitions] = useState(true);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
-    const transitionTimeoutRef = useRef<NodeJS.Timeout>(); useEffect(() => {
-        const updateMobileStatus = () => {
+    const transitionTimeoutRef = useRef<NodeJS.Timeout>();
+
+    useEffect(() => {
+        const handleResize = () => {
             // Temporarily disable transitions during resize/orientation change
             setAllowTransitions(false);
-
-            const pixelRatioManager = PixelRatioManager.getInstance();
-            const newIsMobile = pixelRatioManager.isMobileDevice();
-            setIsMobile(newIsMobile);
 
             // Re-enable transitions after a short delay to prevent animation during resize
             if (transitionTimeoutRef.current) {
@@ -39,16 +37,11 @@ const Image: React.FC<ImageProps> = ({
             }, 100);
         };
 
-        // Initial setup
-        updateMobileStatus();
-
         // Listen for resize events
-        window.addEventListener('resize', updateMobileStatus);
-        window.addEventListener('orientationchange', updateMobileStatus);
-
-        return () => {
-            window.removeEventListener('resize', updateMobileStatus);
-            window.removeEventListener('orientationchange', updateMobileStatus);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', handleResize); return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('orientationchange', handleResize);
             if (transitionTimeoutRef.current) {
                 clearTimeout(transitionTimeoutRef.current);
             }
@@ -88,7 +81,9 @@ const Image: React.FC<ImageProps> = ({
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = undefined;
         }
-    }, []); const handleClose = useCallback(() => {
+    }, []);
+
+    const handleClose = useCallback(() => {
         if (animationState !== 'idle' && animationState !== 'expanding') return;
 
         clearAnimationTimeout();
@@ -101,18 +96,18 @@ const Image: React.FC<ImageProps> = ({
             const wrapper = wrapperRef.current;
             const rect = wrapper.getBoundingClientRect();
 
-            // Batch all style changes to minimize reflows
+            // Batch all style changes to minimize reflows + add hardware acceleration
             const styles = {
                 position: 'fixed',
                 top: `${rect.top}px`,
                 left: `${rect.left}px`,
                 width: `${rect.width}px`,
                 height: `${rect.height}px`,
-                transform: 'none',
+                transform: 'translateZ(0)',
                 zIndex: '10002',
                 margin: '0',
                 padding: '0',
-                willChange: 'top, left, width, height, transform'
+                willChange: 'top, left, width, height'
             };
 
             Object.assign(wrapper.style, styles);
@@ -142,7 +137,7 @@ const Image: React.FC<ImageProps> = ({
             const root = document.documentElement;
             const propsToRemove = ['--image-initial-x', '--image-initial-y', '--image-initial-width', '--image-initial-height'];
             propsToRemove.forEach(prop => root.style.removeProperty(prop));
-        }, 600);
+        }, 300);
     }, [animationState, clearAnimationTimeout]);
 
     const handleImageClick = useCallback((e: React.MouseEvent) => {
@@ -159,7 +154,9 @@ const Image: React.FC<ImageProps> = ({
         if (isExpanded) {
             handleClose();
             return;
-        } clearAnimationTimeout();
+        }
+
+        clearAnimationTimeout();
 
         // Enable transitions for the expand animation
         setAllowTransitions(true);
@@ -169,6 +166,12 @@ const Image: React.FC<ImageProps> = ({
 
         // Prepare for expansion with position data
         setAnimationState('preparing');
+
+        // Add hardware acceleration hint
+        if (wrapperRef.current) {
+            wrapperRef.current.style.transform = 'translateZ(0)';
+            wrapperRef.current.style.willChange = 'top, left, width, height';
+        }
 
         // Optimized animation sequence
         requestAnimationFrame(() => {
@@ -185,7 +188,7 @@ const Image: React.FC<ImageProps> = ({
             if (wrapperRef.current) {
                 wrapperRef.current.style.willChange = '';
             }
-        }, 600);
+        }, 300);
     }, [animationState, isExpanded, handleClose, clearAnimationTimeout, setInitialPosition]);
 
     const handleOverlayClick = useCallback((e: React.MouseEvent) => {
@@ -198,7 +201,9 @@ const Image: React.FC<ImageProps> = ({
         return () => {
             clearAnimationTimeout();
         };
-    }, [clearAnimationTimeout]); const getWrapperClasses = () => {
+    }, [clearAnimationTimeout]);
+
+    const getWrapperClasses = () => {
         const classes = ['image-wrapper', className];
 
         if (isExpanded) classes.push('expanded');
@@ -224,9 +229,10 @@ const Image: React.FC<ImageProps> = ({
                 ref={wrapperRef}
                 className={getWrapperClasses()}
                 onClick={handleImageClick}
+                style={style}
             >
                 <Superellipse
-                    className={`image-component ${!isMobile ? 'inner-scaled' : ''}`}
+                    className={`image-component`}
                     r1={Preset.iOS.r1}
                     r2={Preset.iOS.r2}
                     style={{

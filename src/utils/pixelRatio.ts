@@ -8,9 +8,11 @@ export class PixelRatioManager {
     private static readonly RESOLUTION_THRESHOLDS = [
         { maxWidth: 1920, maxHeight: 1080, pixelRatio: 3.16 },
         { maxWidth: 2560, maxHeight: 1440, pixelRatio: 2.5 },
-        { maxWidth: 3840, maxHeight: 2160, pixelRatio: 2 },
-        { maxWidth: Infinity, maxHeight: Infinity, pixelRatio: 2 }
-    ]; static getInstance(): PixelRatioManager {
+        { maxWidth: 3840, maxHeight: 2160, pixelRatio: 1.5 },
+        { maxWidth: Infinity, maxHeight: Infinity, pixelRatio: 1.25 }
+    ];
+
+    static getInstance(): PixelRatioManager {
         if (!PixelRatioManager.instance) {
             PixelRatioManager.instance = new PixelRatioManager();
         }
@@ -31,12 +33,10 @@ export class PixelRatioManager {
 
         // Check user agent
         const hasMobileKeyword = mobileKeywords.some(keyword => userAgent.includes(keyword));
-
-        // Check for touch capability and screen size
+        // Check for touch capability
         const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const hasSmallScreen = window.innerWidth <= 1024 || window.innerHeight <= 768;
 
-        return hasMobileKeyword || (isTouchDevice && hasSmallScreen);
+        return hasMobileKeyword || (isTouchDevice);
     }
 
     private getViewportDimensions(): { width: number; height: number } {
@@ -95,23 +95,31 @@ export class PixelRatioManager {
         // Set viewport meta
         this.ensureViewportMeta();
 
-        // Apply body styles
+        // Reset body styles for mobile
         Object.assign(document.body.style, {
             width: `${width}px`,
             height: `${height}px`,
             overflow: 'hidden',
             transform: 'none'
         });
+
+        // Reset map scaling for mobile
+        document.documentElement.style.setProperty('--map-scale', '1');
     }
 
     private applyDesktopStyles(): void {
         const scale = 1 / this.pixelRatio;
+
+        // Reset body styles
         Object.assign(document.body.style, {
-            transform: `scale(${scale})`,
-            transformOrigin: 'top left',
-            width: `${100 * this.pixelRatio}%`,
-            height: `${100 * this.pixelRatio}%`
+            transform: 'none',
+            transformOrigin: 'initial',
+            width: '100%',
+            height: '100%'
         });
+
+        // Apply scaling to map wrapper via CSS custom properties
+        document.documentElement.style.setProperty('--map-scale', scale.toString());
     }
 
     private ensureViewportMeta(): void {

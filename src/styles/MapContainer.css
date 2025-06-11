@@ -4,57 +4,17 @@
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 0;
+    z-index: 10000;
+    transform: scale(var(--map-scale, 1));
+    transform-origin: top left;
+    opacity: 1;
 }
 
 .map-container {
     width: 100%;
     height: 100%;
     position: relative !important;
-    background-color: #1a1a1a;
-}
-
-.map-container.error {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #2a2a2a;
-    color: white;
-}
-
-.error-message {
-    text-align: center;
-    padding: 2rem;
-}
-
-.error-message h2 {
-    margin-bottom: 1rem;
-    color: #ff6b6b;
-}
-
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #1a1a1a;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    z-index: 10;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #333;
-    border-top: 4px solid #007cbf;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
+    background: rgb(21, 21, 21);
 }
 
 @keyframes spin {
@@ -89,190 +49,435 @@
     position: relative !important;
 }
 
-.image-wrapper.image-1,
-.image-wrapper.image-2,
-.image-wrapper.image-3 {
+/* Smooth welcoming animation styles */
+.curve-wrapper {
+    opacity: 1;
+}
+
+.animated-path-wrapper {
+    transition: none;
+}
+
+.animated-path-wrapper .animated-path-circle {
+    animation-duration: 1.5s;
+    animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);
+    animation-fill-mode: both;
+}
+
+.marker-wrapper {
+    transition: none;
+}
+
+.marker-wrapper .marker-hitbox .marker-visual {
+    animation-duration: 0.6s;
+    animation-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);
+    animation-fill-mode: both;
+}
+
+.images-wrapper {
+    transition: none;
+    pointer-events: auto;
+}
+
+.images-wrapper .image-wrapper {
+    transition: height 1.35s cubic-bezier(0.12, 0.82, 0.25, 1) var(--organic-image-delay, 0.5s);
+}
+
+.rounded-card-wrapper {
     position: fixed;
-    width: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    height: calc(35% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
     z-index: 9998;
-    padding: 0;
+}
+
+.rounded-card-wrapper .rounded-card-container {
+    transition: top 1.35s cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* Disable transitions after welcoming animation completes */
+.rounded-card-wrapper.welcome-animation-complete .rounded-card-container {
+    transition: none !important;
+}
+
+.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fade-in {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Bouncing scale keyframe animation */
+@keyframes bounceScale {
+    0% {
+        transform: scale(0);
+    }
+
+    45% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Bouncing scale keyframe animation with translate for yellow marker */
+@keyframes bounceScaleWithTranslate {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    65% {
+        transform: translate(-50%, -50%) scale(1.5);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Scale animation states for markers */
+.marker-wrapper.scale-out .marker-hitbox .marker-visual {
+    transform: scale(0) !important;
+    animation: none;
+}
+
+.marker-wrapper.scale-out .marker-hitbox {
+    pointer-events: none;
+}
+
+.marker-wrapper.scale-in .marker-hitbox {
+    pointer-events: auto;
+}
+
+.marker-wrapper.scale-in .marker-hitbox .marker-visual {
+    animation-name: bounceScale;
+}
+
+/* Organic marker scale delays using CSS custom properties */
+.marker-wrapper.scale-in .marker-hitbox .marker-visual {
+    animation-delay: var(--organic-delay, 0s);
+}
+
+/* Scale animation states for animated path (yellow marker) */
+.animated-path-wrapper.fade-out .animated-path-circle {
+    transform: translate(-50%, -50%) scale(0) !important;
+    animation: none;
+}
+
+.animated-path-wrapper.fade-out {
+    pointer-events: none;
+}
+
+.animated-path-wrapper.fade-in {
+    pointer-events: auto;
+}
+
+.animated-path-wrapper.fade-in .animated-path-circle {
+    animation-name: bounceScaleWithTranslate;
+    z-index: 10003 !important;
+}
+
+/* Height animation states for images */
+.images-wrapper.fade-out .image-wrapper {
+    height: 0 !important;
+    pointer-events: none;
+}
+
+.images-wrapper.fade-in .image-wrapper {
+    pointer-events: auto;
+}
+
+.slide-down .rounded-card-container {
+    top: 150% !important;
+    pointer-events: none;
+}
+
+.slide-up .rounded-card-container {
+    top: 50% !important;
+    pointer-events: auto;
+}
+
+/* Responsive ending positions for slide-up animation */
+@media (min-aspect-ratio: 9/16) {
+    .slide-up .rounded-card-container {
+        top: 85% !important;
+    }
+}
+
+@media (min-aspect-ratio: 3/2) {
+    .slide-up .rounded-card-container {
+        top: 65% !important;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .slide-up .rounded-card-container {
+        top: 85% !important;
+    }
+}
+
+@media (max-aspect-ratio: 9/16) {
+    .slide-up .rounded-card-container {
+        top: 80% !important;
+    }
+}
+
+
+/* Prevent images from interfering with expanded images */
+.image-wrapper.has-expanded-image:not(.expanded) {
+    pointer-events: none;
+}
+
+/* UI Overlay - Outside pixelRatio-affected area */
+.ui-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    pointer-events: none;
+    z-index: 10000;
+    box-sizing: border-box;
+}
+
+.ui-overlay .rounded-card-wrapper {
+    pointer-events: none !important;
+}
+
+.ui-overlay .rounded-card-wrapper .rounded-card-container {
+    pointer-events: auto;
+}
+
+.ui-overlay .images-wrapper {
+    pointer-events: auto;
+}
+
+/* Markers can receive pointer events by giving them higher specificity */
+.marker-wrapper.scale-in {
+    z-index: 10001 !important;
+}
+
+.marker-wrapper.scale-in .marker-hitbox {
+    pointer-events: auto !important;
+    z-index: 10002 !important;
+    position: absolute !important;
+    cursor: pointer !important;
+}
+
+/* Loading and Error states - Outside pixelRatio-affected area */
+.loading-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background: rgb(21, 21, 21);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    pointer-events: auto;
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+    transition: opacity 0.8s, transform 1s ease, filter 1s ease;
+}
+
+.loading-wrapper.fade-out {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: blur(15vmin);
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.loading-spinner {
+    width: 20vmin;
+    height: 20vmin;
+    border: 2vmin solid #333;
+    border-top: 2vmin solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 8vmin;
+}
+
+.loading-text {
+    font-size: 6vmin;
     margin: 0;
+    color: white;
 }
 
-/* Default landscape positioning */
-.image-wrapper.image-1 {
-    top: 39%;
-    left: 62%;
+.error-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background-color: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    pointer-events: auto;
 }
 
-.image-wrapper.image-2 {
-    top: 39%;
-    left: 74%;
+.error-container {
+    text-align: center;
+    padding: 8vmin;
+    max-width: 80dvw;
+    color: white;
 }
 
-.image-wrapper.image-3 {
-    top: 39%;
-    left: 86%;
+.error-title {
+    margin-bottom: 3vmin;
+    color: #ff6b6b;
+    font-size: 6vmin;
+    font-weight: bold;
 }
 
-.image-wrapper.mobile-position.image-1,
-.image-wrapper.mobile-position.image-2,
-.image-wrapper.mobile-position.image-3 {
-    transform: translateY(-50%) scale(1);
+.error-description {
+    margin-bottom: 2vmin;
+    font-size: 3.5vmin;
+    line-height: 1.4;
 }
 
-.image-wrapper.desktop-scaled.image-1,
-.image-wrapper.desktop-scaled.image-2,
-.image-wrapper.desktop-scaled.image-3 {
-    transform: translateY(-50%) translateX(-33%) scale(0.333);
+.error-help {
+    margin: 0;
+    font-size: 3vmin;
+    opacity: 0.8;
 }
 
-@media (max-aspect-ratio: 16/9) {
+/* Responsive adjustments for loading and error states */
+@media (max-aspect-ratio: 4/5) {
 
-    /* Portrait mode wide */
-    .image-wrapper.image-1,
-    .image-wrapper.image-2,
-    .image-wrapper.image-3 {
-        top: 26%;
-        width: calc(10% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(30% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    /* Portrait mode narrow */
+    .loading-spinner {
+        width: 24vmin;
+        height: 24vmin;
+        border-width: 2.4vmin;
+        margin-bottom: 10vmin;
     }
 
-    .image-wrapper.image-1 {
-        left: 68%;
+    .loading-text {
+        font-size: 6.5vmin;
     }
 
-    .image-wrapper.image-2 {
-        left: 79.5%;
+    .error-title {
+        font-size: 7vmin;
     }
 
-    .image-wrapper.image-3 {
-        left: 91%;
+    .error-description {
+        font-size: 4vmin;
     }
 
-    .image-wrapper.mobile-position.image-1,
-    .image-wrapper.mobile-position.image-2,
-    .image-wrapper.mobile-position.image-3 {
-        transform: translateX(-50%) scale(1);
-    }
-
-    .image-wrapper.desktop-scaled.image-1,
-    .image-wrapper.desktop-scaled.image-2,
-    .image-wrapper.desktop-scaled.image-3 {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
-    }
-}
-
-@media (max-aspect-ratio: 3/2) {
-
-    /* Portrait mode wide */
-    .image-wrapper.image-1,
-    .image-wrapper.image-2,
-    .image-wrapper.image-3 {
-        top: 60%;
-        width: calc(13% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(21% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-    }
-
-    .image-wrapper.image-1 {
-        left: 35%;
-    }
-
-    .image-wrapper.image-2 {
-        left: 50%;
-    }
-
-    .image-wrapper.image-3 {
-        left: 65%;
-    }
-
-    .image-wrapper.mobile-position.image-1,
-    .image-wrapper.mobile-position.image-2,
-    .image-wrapper.mobile-position.image-3 {
-        transform: translateX(-50%) scale(1);
-    }
-
-    .image-wrapper.desktop-scaled.image-1,
-    .image-wrapper.desktop-scaled.image-2,
-    .image-wrapper.desktop-scaled.image-3 {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
+    .error-help {
+        font-size: 3.5vmin;
     }
 }
 
 @media (max-aspect-ratio: 1/1) {
 
     /* Portrait mode square */
-    .image-wrapper.image-1,
-    .image-wrapper.image-2,
-    .image-wrapper.image-3 {
-        top: 60%;
-        width: calc(20% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(21% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    .loading-spinner {
+        width: 16vmin;
+        height: 16vmin;
+        border-width: 1.6vmin;
+        margin-bottom: 6vmin;
     }
 
-    .image-wrapper.image-1 {
-        left: 27%;
+    .loading-text {
+        font-size: 5vmin;
     }
 
-    .image-wrapper.image-2 {
-        left: 50%;
+    .error-title {
+        font-size: 5vmin;
     }
 
-    .image-wrapper.image-3 {
-        left: 73%;
+    .error-description {
+        font-size: 3vmin;
     }
 
-    .image-wrapper.mobile-position.image-1,
-    .image-wrapper.mobile-position.image-2,
-    .image-wrapper.mobile-position.image-3 {
-        transform: translateX(-50%) scale(1);
-    }
-
-    .image-wrapper.desktop-scaled.image-1,
-    .image-wrapper.desktop-scaled.image-2,
-    .image-wrapper.desktop-scaled.image-3 {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
+    .error-help {
+        font-size: 2.5vmin;
     }
 }
 
-@media (max-aspect-ratio: 9/16) {
+@media (min-aspect-ratio: 3/2) {
 
-    /* Thin portrait mode */
-    .image-wrapper.image-1,
-    .image-wrapper.image-2,
-    .image-wrapper.image-3 {
-        top: 60%;
-        width: calc(25% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
-        height: calc(21% * var(--pixel-ratio, 1) * var(--marker-mobile-scale, 1));
+    /* Landscape mode */
+    .loading-spinner {
+        width: 12vmin;
+        height: 12vmin;
+        border-width: 1.2vmin;
+        margin-bottom: 4vmin;
     }
 
-    .image-wrapper.image-1 {
-        left: 21%;
+    .loading-text {
+        font-size: 3.5vmin;
     }
 
-    .image-wrapper.image-2 {
-        left: 50%;
+    .error-container {
+        padding: 5vmin;
+        max-width: 60dvw;
     }
 
-    .image-wrapper.image-3 {
-        left: 79%;
+    .error-title {
+        font-size: 4vmin;
+        margin-bottom: 2vmin;
     }
 
-    .image-wrapper.mobile-position.image-1,
-    .image-wrapper.mobile-position.image-2,
-    .image-wrapper.mobile-position.image-3 {
-        transform: translateX(-50%) scale(1);
+    .error-description {
+        font-size: 2.5vmin;
+        margin-bottom: 1.5vmin;
     }
 
-    .image-wrapper.desktop-scaled.image-1,
-    .image-wrapper.desktop-scaled.image-2,
-    .image-wrapper.desktop-scaled.image-3 {
-        transform: translateX(-50%) translateY(-33%) scale(0.333);
+    .error-help {
+        font-size: 2vmin;
     }
 }
 
-/* Prevent images from interfering with expanded images */
-.image-wrapper.has-expanded-image:not(.expanded) {
-    pointer-events: none;
+@media (min-aspect-ratio: 5/2) {
+
+    /* Landscape mode very short */
+    .loading-spinner {
+        width: 10vmin;
+        height: 10vmin;
+        border-width: 1vmin;
+        margin-bottom: 3vmin;
+    }
+
+    .loading-text {
+        font-size: 3vmin;
+    }
+
+    .error-container {
+        padding: 3vmin;
+        max-width: 50dvw;
+    }
+
+    .error-title {
+        font-size: 3vmin;
+        margin-bottom: 1.5vmin;
+    }
+
+    .error-description {
+        font-size: 2vmin;
+        margin-bottom: 1vmin;
+    }
+
+    .error-help {
+        font-size: 1.5vmin;
+    }
 }

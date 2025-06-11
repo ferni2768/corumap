@@ -1,7 +1,7 @@
 :root {
     --curve-thickness: 3;
-    --curve-dash-length: 8;
-    --curve-gap-length: 5;
+    --curve-dash-length: 4;
+    --curve-gap-length: 7;
 }
 
 .curve-container {
@@ -17,14 +17,52 @@
 .curve-path {
     fill: none;
     stroke: #ff0000;
-    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1vmin);
-    stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * 1vmin);
+    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
     stroke-linecap: round;
     opacity: 0.8;
-    transition: opacity 0.2s ease, stroke-width 0.2s ease;
+    transition: opacity 0.2s ease;
+}
+
+/* Drawing animation for curve paths */
+.curve-wrapper.fade-out .curve-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    opacity: 0;
+}
+
+.curve-wrapper.fade-in .curve-path {
+    stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+    stroke-dashoffset: 0;
+    opacity: 0;
+    animation: drawCurve 2.3s cubic-bezier(0.0001, 0.98, 0.0001, 1) forwards,
+        curveOpacityFadeIn 0.5s ease-in forwards;
+}
+
+@keyframes drawCurve {
+    from {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+    }
+
+    to {
+        stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes curveOpacityFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 0.8;
+    }
 }
 
 .curve-path:hover {
     opacity: 1;
-    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1.2 * 1vmin);
+    stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * 1.2 * var(--pixel-ratio, 1) * 1vmin/3);
+    transition: opacity 0.2s ease, stroke-width 0.2s ease;
 }
