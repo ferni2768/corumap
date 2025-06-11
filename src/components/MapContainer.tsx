@@ -85,9 +85,9 @@ const MapContainer: React.FC = () => {
     const [showRoundedCard, setShowRoundedCard] = useState(false);
     const [showImages, setShowImages] = useState(false);
     const [showMarkers, setShowMarkers] = useState(false);
-    const [showCurve, setShowCurve] = useState(false); const [showAnimatedPath, setShowAnimatedPath] = useState(false);
-    const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
+    const [showCurve, setShowCurve] = useState(false); const [showAnimatedPath, setShowAnimatedPath] = useState(false); const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
     const [markerAnimationTrigger, setMarkerAnimationTrigger] = useState<{ markerId: number; timestamp: number } | null>(null);
+    const [isMapMoving, setIsMapMoving] = useState(false);
 
     // Generate organic random delays for images
     const [organicImageDelays] = useState(() => {
@@ -292,6 +292,28 @@ const MapContainer: React.FC = () => {
                     }, 2000);
                 });
 
+                // Track map movement to disable marker transitions during zoom/pan
+                let moveTimeout: NodeJS.Timeout;
+                const handleMapMoveStart = () => {
+                    setIsMapMoving(true);
+                    clearTimeout(moveTimeout);
+                };
+                const handleMapMoveEnd = () => {
+                    clearTimeout(moveTimeout);
+                    moveTimeout = setTimeout(() => {
+                        setIsMapMoving(false);
+                    }, 100);
+                };
+
+                map.current.on('movestart', handleMapMoveStart);
+                map.current.on('zoomstart', handleMapMoveStart);
+                map.current.on('rotatestart', handleMapMoveStart);
+                map.current.on('pitchstart', handleMapMoveStart);
+                map.current.on('moveend', handleMapMoveEnd);
+                map.current.on('zoomend', handleMapMoveEnd);
+                map.current.on('rotateend', handleMapMoveEnd);
+                map.current.on('pitchend', handleMapMoveEnd);
+
                 // Mobile-specific setup
                 if (isMobile) {
                     map.current.on('load', () => {
@@ -424,7 +446,7 @@ const MapContainer: React.FC = () => {
                 <Curve map={map.current} markers={MARKERS} />
             </div>
             <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} />
+                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} isMapMoving={isMapMoving} />
             </div>
 
             <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
@@ -434,6 +456,7 @@ const MapContainer: React.FC = () => {
                     targetMarkerId={targetMarkerId}
                     onAnimationComplete={handleAnimationComplete}
                     onCurrentMarkerChange={handleCurrentMarkerChange}
+                    isMapMoving={isMapMoving}
                 />
             </div>
         </div>

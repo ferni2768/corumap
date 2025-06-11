@@ -14,6 +14,7 @@ interface AnimatedPathProps {
     targetMarkerId: number | null;
     onAnimationComplete?: () => void;
     onCurrentMarkerChange?: (markerId: number, markerName: string) => void;
+    isMapMoving?: boolean;
 }
 
 interface CurvePoint {
@@ -34,7 +35,7 @@ const CURVE_CONTROL_POINTS = [
     { cp1: { x: 0.2, y: 0.3 }, cp2: { x: 0.6, y: -0.5 } }                               // 9->10
 ];
 
-const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange }) => {
+const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange, isMapMoving }) => {
     const [position, setPosition] = useState<CurvePoint>({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [currentMarkerId, setCurrentMarkerId] = useState<number>(1); // Start at first marker
@@ -320,7 +321,7 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
 
     return (
         <div
-            className="animated-path-circle"
+            className={`animated-path-circle ${isMapMoving ? 'map-moving' : ''}`}
             style={{
                 left: `${Math.round(position.x)}px`,
                 top: `${Math.round(position.y)}px`

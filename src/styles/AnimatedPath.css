@@ -12,3 +12,7 @@
     transition: box-shadow 0.2s ease;
     transform-origin: 50% 50%;
 }
+
+.animated-path-circle.map-moving {
+    transition: none !important;
+}

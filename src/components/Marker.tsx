@@ -13,6 +13,7 @@ interface MarkerProps {
     markers: MarkerData[];
     onMarkerClick?: (markerId: number) => void;
     triggerAnimation?: { markerId: number; timestamp: number } | null;
+    isMapMoving?: boolean;
 }
 
 interface MarkerPosition {
@@ -22,7 +23,7 @@ interface MarkerPosition {
     y: number;
 }
 
-const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAnimation }) => {
+const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAnimation, isMapMoving }) => {
     const [markerPositions, setMarkerPositions] = useState<MarkerPosition[]>([]);
     const [organicDelays] = useState<Map<number, number>>(() => {
         // Generate organic random delays once when component mounts
@@ -138,7 +139,7 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAni
         <>
             {markerPositions.map(marker => (<div
                 key={marker.id}
-                className="marker-hitbox"
+                className={`marker-hitbox ${isMapMoving ? 'map-moving' : ''}`}
                 data-marker-id={marker.id}
                 style={{
                     left: `${marker.x}px`,

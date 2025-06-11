@@ -34,6 +34,10 @@
     position: relative;
 }
 
+.marker-hitbox.map-moving .marker-visual {
+    transition: none !important;
+}
+
 /* Hover effect only for devices that support hovering (desktop/PC) */
 @media (hover: hover) and (pointer: fine) {
     .marker-hitbox:hover .marker-visual {
