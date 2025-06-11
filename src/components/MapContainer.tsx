@@ -73,8 +73,8 @@ const MARKERS = [
 
 const MapContainer: React.FC = () => {
     const mapContainer = useRef<HTMLDivElement>(null);
-    const map = useRef<mapboxgl.Map | null>(null);
-    const [loading, setLoading] = useState(true);
+    const map = useRef<mapboxgl.Map | null>(null); const [loading, setLoading] = useState(true);
+    const [loadingFadingOut, setLoadingFadingOut] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
@@ -237,11 +237,17 @@ const MapContainer: React.FC = () => {
                     preserveDrawingBuffer: true
                 });
 
-                let isLoaded = false;
-                const onLoad = () => {
+                let isLoaded = false; const onLoad = () => {
                     if (isLoaded || !map.current) return;
                     isLoaded = true;
-                    setLoading(false);
+
+                    // Start fade out transition for loading screen
+                    setLoadingFadingOut(true);
+
+                    // Complete loading transition after fade animation
+                    setTimeout(() => {
+                        setLoading(false);
+                    }, 800);
 
                     // Recalculate bounds with current dimensions when map loads
                     const currentCenter = getResponsiveCenter();
@@ -280,6 +286,10 @@ const MapContainer: React.FC = () => {
                 map.current.on('error', (e) => {
                     setError(`Map error: ${e.error?.message || 'Unknown error'}`);
                     setLoading(false);
+                    // Reload page after 2 seconds when there's an explicit error
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
                 });
 
                 // Mobile-specific setup
@@ -289,16 +299,7 @@ const MapContainer: React.FC = () => {
                     });
                 }
 
-                // Timeout fallback
-                const timeout = setTimeout(() => {
-                    if (!isLoaded) {
-                        setError('Map loading timeout - please check your internet connection');
-                        setLoading(false);
-                    }
-                }, 10000);
-
                 return () => {
-                    clearTimeout(timeout);
                     if (map.current) {
                         map.current.remove();
                         map.current = null;
@@ -308,6 +309,10 @@ const MapContainer: React.FC = () => {
             } catch (err) {
                 setError(`Failed to initialize map: ${err instanceof Error ? err.message : 'Unknown error'}`);
                 setLoading(false);
+                // Reload page after 2 seconds when there's an initialization error
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             }
         };
 
@@ -412,88 +417,87 @@ const MapContainer: React.FC = () => {
         };
     }, [currentMarkerIndex]);
 
-    return (
-        <>
-            <div className="map-wrapper">
-                <div ref={mapContainer} className="map-container" />
-                <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
-                    <Curve map={map.current} markers={MARKERS} />
-                </div>
-                <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                    <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} />
-                </div>
-
-                <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
-                    <AnimatedPath
-                        map={map.current}
-                        markers={MARKERS}
-                        targetMarkerId={targetMarkerId}
-                        onAnimationComplete={handleAnimationComplete}
-                        onCurrentMarkerChange={handleCurrentMarkerChange}
-                    />
-                </div>
+    return (<>
+        <div className="map-wrapper">
+            <div ref={mapContainer} className="map-container" />
+            <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
+                <Curve map={map.current} markers={MARKERS} />
+            </div>
+            <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
+                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} />
             </div>
 
-            {/* UI Overlay - Outside pixelRatio-affected area */}
-            <div className="ui-overlay">
-                {/* Loading state */}
-                {loading && (
-                    <div className="loading-wrapper">
-                        <div className="loading-container">
-                            <div className="loading-spinner"></div>
-                            <p className="loading-text">Applying pixel ratio and loading map...</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Error state */}
-                {error && (
-                    <div className="error-wrapper">
-                        <div className="error-container">
-                            <h2 className="error-title">Map Error</h2>
-                            <p className="error-description">{error}</p>
-                            <p className="error-help">Please check your internet connection and Mapbox token.</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Only show other UI elements when not in error state */}
-                {!error && (
-                    <>
-                        <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
-                            <Image
-                                className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                                alt="Image 1"
-                                style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
-                            />
-                            <Image
-                                className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                                alt="Image 2"
-                                style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
-                            />
-                            <Image
-                                className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                                alt="Image 3"
-                                style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
-                            />
-                        </div>
-
-                        <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'} ${welcomingAnimationComplete ? 'welcome-animation-complete' : ''}`}>
-                            <RoundedCard
-                                showDebugOverlay={false}
-                                markerLocationText={currentMarkerLocation}
-                                onPreviousMarker={handlePreviousMarker}
-                                onNextMarker={handleNextMarker}
-                                canGoPrevious={canGoPrevious}
-                                canGoNext={canGoNext}
-                                fastAnimation={fastAnimation}
-                                externalAnimationDirection={animationDirection}
-                            />
-                        </div>
-                    </>
-                )}
+            <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
+                <AnimatedPath
+                    map={map.current}
+                    markers={MARKERS}
+                    targetMarkerId={targetMarkerId}
+                    onAnimationComplete={handleAnimationComplete}
+                    onCurrentMarkerChange={handleCurrentMarkerChange}
+                />
             </div>
-        </>
+        </div>
+
+        {/* UI Overlay - Outside pixelRatio-affected area */}
+        <div className="ui-overlay">
+            {/* Loading state */}
+            {loading && (
+                <div className={`loading-wrapper ${loadingFadingOut ? 'fade-out' : ''}`}>
+                    <div className="loading-container">
+                        <div className="loading-spinner"></div>
+                        <p className="loading-text">Loading A Coruña</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error state */}
+            {error && (
+                <div className="error-wrapper">
+                    <div className="error-container">
+                        <h2 className="error-title">Map Error</h2>
+                        <p className="error-description">{error}</p>
+                        <p className="error-help">Please check your internet connection and Mapbox token.</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Only show other UI elements when not in error state */}
+            {!error && (
+                <>
+                    <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
+                        <Image
+                            className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                            alt="Image 1"
+                            style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
+                        />
+                        <Image
+                            className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                            alt="Image 2"
+                            style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
+                        />
+                        <Image
+                            className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                            alt="Image 3"
+                            style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
+                        />
+                    </div>
+
+                    <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'} ${welcomingAnimationComplete ? 'welcome-animation-complete' : ''}`}>
+                        <RoundedCard
+                            showDebugOverlay={false}
+                            markerLocationText={currentMarkerLocation}
+                            onPreviousMarker={handlePreviousMarker}
+                            onNextMarker={handleNextMarker}
+                            canGoPrevious={canGoPrevious}
+                            canGoNext={canGoNext}
+                            fastAnimation={fastAnimation}
+                            externalAnimationDirection={animationDirection}
+                        />
+                    </div>
+                </>
+            )}
+        </div>
+    </>
     );
 };
 
