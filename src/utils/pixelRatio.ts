@@ -8,9 +8,11 @@ export class PixelRatioManager {
     private static readonly RESOLUTION_THRESHOLDS = [
         { maxWidth: 1920, maxHeight: 1080, pixelRatio: 3.16 },
         { maxWidth: 2560, maxHeight: 1440, pixelRatio: 2.5 },
-        { maxWidth: 3840, maxHeight: 2160, pixelRatio: 2 },
-        { maxWidth: Infinity, maxHeight: Infinity, pixelRatio: 2 }
-    ]; static getInstance(): PixelRatioManager {
+        { maxWidth: 3840, maxHeight: 2160, pixelRatio: 1.5 },
+        { maxWidth: Infinity, maxHeight: Infinity, pixelRatio: 1.25 }
+    ];
+
+    static getInstance(): PixelRatioManager {
         if (!PixelRatioManager.instance) {
             PixelRatioManager.instance = new PixelRatioManager();
         }
