@@ -186,16 +186,21 @@
     transition: transform 0.1s, filter 0.1s;
 }
 
-.card-arrow:hover {
-    cursor: pointer;
-    transform: translateY(-50%) scale(1.25);
-    filter: brightness(0.9);
-    transition: transform 0.1s;
-    opacity: 1;
+/* Hover effects only for devices that support hovering (desktop/PC) */
+@media (hover: hover) and (pointer: fine) {
+    .card-arrow:hover {
+        cursor: pointer;
+        transform: translateY(-50%) scale(1.25);
+        filter: brightness(0.9);
+        transition: transform 0.1s;
+        opacity: 1;
+    }
 }
 
+/* Active/tap effects for all devices */
 .card-arrow:active {
     transform: translateY(-50%) scale(1.1);
+    filter: brightness(0.8);
     transition: transform 0.05s;
 }
 
@@ -206,8 +211,11 @@
     opacity: 0.8;
 }
 
-.card-arrow.disabled:hover {
-    transform: translateY(-50%) scale(1);
+/* Disabled hover state only for devices that support hovering */
+@media (hover: hover) and (pointer: fine) {
+    .card-arrow.disabled:hover {
+        transform: translateY(-50%) scale(1);
+    }
 }
 
 .card-arrow-left {

@@ -12,6 +12,7 @@ interface MarkerProps {
     map: mapboxgl.Map | null;
     markers: MarkerData[];
     onMarkerClick?: (markerId: number) => void;
+    triggerAnimation?: { markerId: number; timestamp: number } | null;
 }
 
 interface MarkerPosition {
@@ -21,7 +22,7 @@ interface MarkerPosition {
     y: number;
 }
 
-const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
+const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAnimation }) => {
     const [markerPositions, setMarkerPositions] = useState<MarkerPosition[]>([]);
     const [organicDelays] = useState<Map<number, number>>(() => {
         // Generate organic random delays once when component mounts
@@ -41,6 +42,35 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
 
         return delayMap;
     });
+
+    // Handle external animation trigger
+    useEffect(() => {
+        if (triggerAnimation) {
+            const markerElement = document.querySelector(`[data-marker-id="${triggerAnimation.markerId}"]`);
+            if (markerElement) {
+                const visualElement = markerElement.querySelector('.marker-visual') as HTMLElement;
+                markerElement.classList.add('arrow-triggered');
+
+                // Temporarily disable any existing animations during arrow animation
+                if (visualElement) {
+                    visualElement.style.animationName = 'arrow-marker-pulse';
+                    visualElement.style.animationDelay = '0s';
+                    visualElement.style.animationDuration = '0.6s';
+                    visualElement.style.animationTimingFunction = 'ease-in-out';
+                }
+
+                setTimeout(() => {
+                    markerElement.classList.remove('arrow-triggered');
+                    if (visualElement) {
+                        visualElement.style.animationName = 'none';
+                        visualElement.style.animationDelay = '';
+                        visualElement.style.animationDuration = '';
+                        visualElement.style.animationTimingFunction = '';
+                    }
+                }, 600);
+            }
+        }
+    }, [triggerAnimation]);
 
     const updateMarkerPositions = () => {
         if (!map) return;
@@ -63,8 +93,6 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
         // Update position on map events
         const events = ['move', 'zoom', 'rotate', 'pitch'];
         events.forEach(event => map.on(event, updateMarkerPositions));
-
-        // Initial position update
         updateMarkerPositions();
 
         return () => {
@@ -74,25 +102,61 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick }) => {
 
     const handleMarkerClick = (markerId: number) => {
         onMarkerClick?.(markerId);
-    }; if (markerPositions.length === 0) return null;
+    };
+
+    const handleTouchStart = (event: React.TouchEvent) => {
+        // Add active class for mobile touch
+        const element = event.currentTarget as HTMLElement;
+        element.classList.add('active');
+    };
+
+    const handleTouchEnd = (event: React.TouchEvent) => {
+        // Remove active class after touch with proper delay
+        const element = event.currentTarget as HTMLElement;
+        setTimeout(() => {
+            element.classList.remove('active');
+        }, 50);
+    };
+
+    const handleMouseDown = (event: React.MouseEvent) => {
+        // Ensure PC clicks work properly
+        const element = event.currentTarget as HTMLElement;
+        element.classList.add('active');
+    };
+
+    const handleMouseUp = (event: React.MouseEvent) => {
+        // Remove active class after PC click
+        const element = event.currentTarget as HTMLElement;
+        setTimeout(() => {
+            element.classList.remove('active');
+        }, 50);
+    };
+
+    if (markerPositions.length === 0) return null;
 
     return (
         <>
-            {markerPositions.map(marker => (
-                <div
-                    key={marker.id}
-                    className="marker-hitbox"
-                    style={{
-                        left: `${marker.x}px`,
-                        top: `${marker.y}px`,
-                        transform: 'translate(-50%, -50%)',
-                        '--organic-delay': `${organicDelays.get(marker.id) || 0}ms`
-                    } as React.CSSProperties}
-                    title={marker.name}
-                    onClick={() => handleMarkerClick(marker.id)}
-                >
-                    <div className="marker-visual" />
-                </div>
+            {markerPositions.map(marker => (<div
+                key={marker.id}
+                className="marker-hitbox"
+                data-marker-id={marker.id}
+                style={{
+                    left: `${marker.x}px`,
+                    top: `${marker.y}px`,
+                    transform: 'translate(-50%, -50%)',
+                    '--organic-delay': `${organicDelays.get(marker.id) || 0}ms`
+                } as React.CSSProperties}
+                title={marker.name}
+                onClick={() => handleMarkerClick(marker.id)}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onTouchCancel={handleTouchEnd}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+            >
+                <div className="marker-visual" />
+            </div>
             ))}
         </>
     );

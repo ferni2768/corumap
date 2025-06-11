@@ -85,9 +85,9 @@ const MapContainer: React.FC = () => {
     const [showRoundedCard, setShowRoundedCard] = useState(false);
     const [showImages, setShowImages] = useState(false);
     const [showMarkers, setShowMarkers] = useState(false);
-    const [showCurve, setShowCurve] = useState(false);
-    const [showAnimatedPath, setShowAnimatedPath] = useState(false);
+    const [showCurve, setShowCurve] = useState(false); const [showAnimatedPath, setShowAnimatedPath] = useState(false);
     const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
+    const [markerAnimationTrigger, setMarkerAnimationTrigger] = useState<{ markerId: number; timestamp: number } | null>(null);
 
     // Generate organic random delays for images
     const [organicImageDelays] = useState(() => {
@@ -346,7 +346,9 @@ const MapContainer: React.FC = () => {
 
     const handleAnimationComplete = () => {
         setTargetMarkerId(null);
-    }; const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
+    };
+
+    const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
@@ -360,6 +362,9 @@ const MapContainer: React.FC = () => {
             setAnimationDirection('backward');
             const previousMarkerId = MARKERS[currentMarkerIndex - 1].id;
             setTargetMarkerId(previousMarkerId);
+
+            // Trigger marker animation for the previous marker
+            setMarkerAnimationTrigger({ markerId: previousMarkerId, timestamp: Date.now() });
         }
     };
 
@@ -368,6 +373,9 @@ const MapContainer: React.FC = () => {
             setAnimationDirection('forward');
             const nextMarkerId = MARKERS[currentMarkerIndex + 1].id;
             setTargetMarkerId(nextMarkerId);
+
+            // Trigger marker animation for the next marker
+            setMarkerAnimationTrigger({ markerId: nextMarkerId, timestamp: Date.now() });
         }
     };
 
@@ -412,7 +420,7 @@ const MapContainer: React.FC = () => {
                     <Curve map={map.current} markers={MARKERS} />
                 </div>
                 <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                    <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} />
+                    <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} />
                 </div>
 
                 <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
