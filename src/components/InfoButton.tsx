@@ -7,7 +7,6 @@ interface InfoButtonProps {
 
 const InfoButton: React.FC<InfoButtonProps> = ({ onClick }) => {
     const handleClick = () => {
-        console.log('InfoButton handleClick called');
         onClick();
     };
 

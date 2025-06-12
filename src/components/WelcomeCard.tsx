@@ -66,13 +66,6 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({ isVisible, onToggle }) => {
             root.style.setProperty('--welcome-initial-left', `${rect.left}px`);
             root.style.setProperty('--welcome-initial-width', `${rect.width}px`);
             root.style.setProperty('--welcome-initial-height', `${rect.height}px`);
-
-            console.log('InfoButton position captured:', {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height
-            });
         } else if (wrapperRef.current) {
             // Fallback to welcome card's own position if InfoButton not found
             const rect = wrapperRef.current.getBoundingClientRect();
@@ -80,13 +73,6 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({ isVisible, onToggle }) => {
             root.style.setProperty('--welcome-initial-left', `${rect.left}px`);
             root.style.setProperty('--welcome-initial-width', `${rect.width}px`);
             root.style.setProperty('--welcome-initial-height', `${rect.height}px`);
-
-            console.log('Fallback position captured:', {
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height
-            });
         }
     }, []);
 
