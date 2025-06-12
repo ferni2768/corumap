@@ -481,3 +481,16 @@
         font-size: 1.5vmin;
     }
 }
+
+/* Enable pointer events for InfoButton and WelcomeCard */
+.ui-overlay .info-button {
+    pointer-events: auto !important;
+}
+
+.ui-overlay .welcome-wrapper {
+    pointer-events: auto !important;
+}
+
+.ui-overlay .welcome-overlay {
+    pointer-events: auto !important;
+}

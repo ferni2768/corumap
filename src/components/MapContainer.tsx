@@ -6,6 +6,8 @@ import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
 import RoundedCard from './RoundedCard';
 import Image from './Image';
+import WelcomeCard from './WelcomeCard';
+import InfoButton from './InfoButton';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -87,7 +89,16 @@ const MapContainer: React.FC = () => {
     const [showMarkers, setShowMarkers] = useState(false);
     const [showCurve, setShowCurve] = useState(false); const [showAnimatedPath, setShowAnimatedPath] = useState(false); const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
     const [markerAnimationTrigger, setMarkerAnimationTrigger] = useState<{ markerId: number; timestamp: number } | null>(null);
-    const [isMapMoving, setIsMapMoving] = useState(false);
+    const [isMapMoving, setIsMapMoving] = useState(false); const [showWelcomeCard, setShowWelcomeCard] = useState(false);
+    const [welcomeCardVisible, setWelcomeCardVisible] = useState(false);
+
+    const hasSeenWelcome = () => {
+        return localStorage.getItem('corumap-hasSeenWelcome') === 'true';
+    };
+
+    const markWelcomeAsSeen = () => {
+        localStorage.setItem('corumap-hasSeenWelcome', 'true');
+    };
 
     // Generate organic random delays for images
     const [organicImageDelays] = useState(() => {
@@ -273,12 +284,16 @@ const MapContainer: React.FC = () => {
                 };
 
                 const startWelcomingAnimation = () => {
+                    setShowWelcomeCard(true);
                     setTimeout(() => setShowMarkers(true), 200);
                     setTimeout(() => setShowCurve(true), 1000);
                     setTimeout(() => setShowAnimatedPath(true), 2100);
                     setTimeout(() => setShowImages(true), 1300);
-                    setTimeout(() => setShowRoundedCard(true), 1600);
-                    setTimeout(() => setWelcomingAnimationComplete(true), 2950);
+                    setTimeout(() => setShowRoundedCard(true), 1600); setTimeout(() => setWelcomingAnimationComplete(true), 2950);
+
+                    if (!hasSeenWelcome()) {
+                        setTimeout(() => setWelcomeCardVisible(true), 2350);
+                    }
                 };
 
                 map.current.on('load', onLoad);
@@ -444,6 +459,15 @@ const MapContainer: React.FC = () => {
         };
     }, [currentMarkerIndex, welcomingAnimationComplete]);
 
+    const handleInfoButtonClick = () => {
+        setWelcomeCardVisible(!welcomeCardVisible);
+    };
+
+    const handleWelcomeCardToggle = () => {
+        setWelcomeCardVisible(false);
+        markWelcomeAsSeen();
+    };
+
     return (<>
         <div className="map-wrapper">
             <div ref={mapContainer} className="map-container" />
@@ -528,10 +552,22 @@ const MapContainer: React.FC = () => {
                             canGoPrevious={canGoPrevious}
                             canGoNext={canGoNext}
                             fastAnimation={fastAnimation}
-                            externalAnimationDirection={animationDirection}
-                        />
+                            externalAnimationDirection={animationDirection} />
                     </div>
                 </>
+            )}
+
+            {/* Info Button */}
+            {showWelcomeCard && (
+                <InfoButton onClick={handleInfoButtonClick} />
+            )}
+
+            {/* Welcome Card */}
+            {showWelcomeCard && (
+                <WelcomeCard
+                    isVisible={welcomeCardVisible}
+                    onToggle={handleWelcomeCardToggle}
+                />
             )}
         </div>
     </>
