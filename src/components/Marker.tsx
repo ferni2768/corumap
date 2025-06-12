@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MiniLogo from './MiniLogo';
 import '../styles/Marker.css';
 
 interface MarkerData {
@@ -14,6 +15,8 @@ interface MarkerProps {
     onMarkerClick?: (markerId: number) => void;
     triggerAnimation?: { markerId: number; timestamp: number } | null;
     isMapMoving?: boolean;
+    currentMarkerId?: number;
+    showMarkers?: boolean;
 }
 
 interface MarkerPosition {
@@ -23,7 +26,7 @@ interface MarkerPosition {
     y: number;
 }
 
-const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAnimation, isMapMoving }) => {
+const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAnimation, isMapMoving, currentMarkerId, showMarkers }) => {
     const [markerPositions, setMarkerPositions] = useState<MarkerPosition[]>([]);
     const [organicDelays] = useState<Map<number, number>>(() => {
         // Generate organic random delays once when component mounts
@@ -137,27 +140,40 @@ const Marker: React.FC<MarkerProps> = ({ map, markers, onMarkerClick, triggerAni
 
     return (
         <>
-            {markerPositions.map(marker => (<div
-                key={marker.id}
-                className={`marker-hitbox ${isMapMoving ? 'map-moving' : ''}`}
-                data-marker-id={marker.id}
-                style={{
-                    left: `${marker.x}px`,
-                    top: `${marker.y}px`,
-                    transform: 'translate(-50%, -50%)',
-                    '--organic-delay': `${organicDelays.get(marker.id) || 0}ms`
-                } as React.CSSProperties}
-                title={marker.name}
-                onClick={() => handleMarkerClick(marker.id)}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                onTouchCancel={handleTouchEnd}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-            >
-                <div className="marker-visual" />
-            </div>
+            {markerPositions.map(marker => (
+                <div
+                    key={marker.id}
+                    className={`marker-hitbox ${isMapMoving ? 'map-moving' : ''}`}
+                    data-marker-id={marker.id}
+                    style={{
+                        left: `${marker.x}px`,
+                        top: `${marker.y}px`,
+                        transform: 'translate(-50%, -50%)',
+                        '--organic-delay': `${organicDelays.get(marker.id) || 0}ms`
+                    } as React.CSSProperties}
+                    title={marker.name}
+                    onClick={() => handleMarkerClick(marker.id)}
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchCancel={handleTouchEnd}
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                >
+                    <div className="marker-visual" />
+                </div>
+            ))}
+            {markerPositions.map(marker => (
+                <MiniLogo
+                    key={`logo-${marker.id}`}
+                    markerId={marker.id}
+                    markerX={marker.x}
+                    markerY={marker.y}
+                    isMapMoving={isMapMoving}
+                    currentMarkerId={currentMarkerId}
+                    showMarkers={showMarkers}
+                    organicDelay={organicDelays.get(marker.id) || 0}
+                />
             ))}
         </>
     );

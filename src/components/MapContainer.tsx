@@ -51,12 +51,12 @@ const MARKERS = [
     },
     {
         id: 7,
-        name: "7. Rosa dos Ventos",
+        name: "7. Tower of Hercules",
         coordinates: [-8.407725, 43.386702] as [number, number]
     },
     {
         id: 8,
-        name: "8. Tower of Hercules viewpoint",
+        name: "8. Caracola",
         coordinates: [-8.399772, 43.388004] as [number, number]
     },
     {
@@ -77,8 +77,8 @@ const MapContainer: React.FC = () => {
     const [loadingFadingOut, setLoadingFadingOut] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
-    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench'); const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
+    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null); const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench'); const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
+    const [currentMarkerId, setCurrentMarkerId] = useState<number>(1);
     const [fastAnimation, setFastAnimation] = useState<boolean>(false);
     const [animationDirection, setAnimationDirection] = useState<'forward' | 'backward'>('forward');
     const [hasExpandedImage, setHasExpandedImage] = useState(false);
@@ -353,6 +353,8 @@ const MapContainer: React.FC = () => {
     }, [isMobile]);
 
     const handleMarkerClick = (markerId: number) => {
+        if (!welcomingAnimationComplete) return; // Don't allow marker clicks during welcome animation
+
         // Calculate direction based on current vs target marker
         const targetIndex = MARKERS.findIndex(marker => marker.id === markerId);
         if (targetIndex !== -1) {
@@ -377,6 +379,7 @@ const MapContainer: React.FC = () => {
 
     const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
+        setCurrentMarkerId(_markerId);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
         if (markerIndex !== -1) {
@@ -385,6 +388,7 @@ const MapContainer: React.FC = () => {
     };
 
     const handlePreviousMarker = () => {
+        if (!welcomingAnimationComplete) return; // Don't allow navigation during welcome animation
         if (currentMarkerIndex > 0) {
             setAnimationDirection('backward');
             const previousMarkerId = MARKERS[currentMarkerIndex - 1].id;
@@ -396,6 +400,7 @@ const MapContainer: React.FC = () => {
     };
 
     const handleNextMarker = () => {
+        if (!welcomingAnimationComplete) return; // Don't allow navigation during welcome animation
         if (currentMarkerIndex < MARKERS.length - 1) {
             setAnimationDirection('forward');
             const nextMarkerId = MARKERS[currentMarkerIndex + 1].id;
@@ -406,8 +411,8 @@ const MapContainer: React.FC = () => {
         }
     };
 
-    const canGoPrevious = currentMarkerIndex > 0;
-    const canGoNext = currentMarkerIndex < MARKERS.length - 1;
+    const canGoPrevious = welcomingAnimationComplete && currentMarkerIndex > 0;
+    const canGoNext = welcomingAnimationComplete && currentMarkerIndex < MARKERS.length - 1;
 
     // Handle keyboard navigation
     useEffect(() => {
@@ -437,7 +442,7 @@ const MapContainer: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
         };
-    }, [currentMarkerIndex]);
+    }, [currentMarkerIndex, welcomingAnimationComplete]);
 
     return (<>
         <div className="map-wrapper">
@@ -446,7 +451,15 @@ const MapContainer: React.FC = () => {
                 <Curve map={map.current} markers={MARKERS} />
             </div>
             <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} isMapMoving={isMapMoving} />
+                <Marker
+                    map={map.current}
+                    markers={MARKERS}
+                    onMarkerClick={handleMarkerClick}
+                    triggerAnimation={markerAnimationTrigger}
+                    isMapMoving={isMapMoving}
+                    currentMarkerId={currentMarkerId}
+                    showMarkers={showMarkers}
+                />
             </div>
 
             <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
@@ -457,6 +470,7 @@ const MapContainer: React.FC = () => {
                     onAnimationComplete={handleAnimationComplete}
                     onCurrentMarkerChange={handleCurrentMarkerChange}
                     isMapMoving={isMapMoving}
+                    welcomingAnimationComplete={welcomingAnimationComplete}
                 />
             </div>
         </div>
