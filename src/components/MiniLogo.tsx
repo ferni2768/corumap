@@ -112,12 +112,15 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
     };
 
     const renderShape = () => {
-        const size = `calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3 * ${config.size})`;
+        const sizeStyle = {
+            width: `calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3 * ${config.size})`,
+            height: `calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3 * ${config.size})`
+        };
 
         // Millenium
         if (markerId === 1) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M251.423,352.523L198.164,48.477l-56.587,302.9"
                         fill="none"
@@ -132,7 +135,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Riazor
         if (markerId === 2) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M280.564,316.6c-53.076-88.848,32.66-116.344,42.1-177.371s-83.812-63.348-126.316-32.915c-57.645,41.275-144.623,19.2-144.623,19.2"
                         fill="none"
@@ -147,7 +150,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Rompeolas
         if (markerId === 3) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M48,343L155.914,237.965S117.1,139.415,100.178,95.659c-6.6-32.2,39.618-51.367,55.736-11.294l73.525,168.282L367,181.494"
                         fill="none"
@@ -162,7 +165,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Columns
         if (markerId === 4) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <g>
                         <path
                             d="M97,202c10.084,21.343,69.056,69.538,69.056,67.652,0-16.051,5.613-176.313,2.949-181.476C134.875,70.292,110,38,110,38"
@@ -185,7 +188,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Aquarium
         if (markerId === 5) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M224.237,369.726L207.062,241.313l-121.1-22.467,18.526-80.18,118.4,24.113L275.2,28.67"
                         fill="none"
@@ -200,7 +203,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Lapas
         if (markerId === 6) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M57,229.861c99.847-14.248,172.624,86.317,242.893,80.92,61.679-4.736,48.224-63.229,6.515-86.259C242.584,189.281,139.117,88,139.117,88"
                         fill="none"
@@ -214,7 +217,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Hercules
         if (markerId === 7) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M78.037,354.383l73.137-15.017v-170.2l22.041-34.039,2-93.109,7.013,49.057h39.074l-1,41.048,26.049,37.043v172.2l75.14,18.021"
                         fill="none"
@@ -228,7 +231,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Caracola
         if (markerId === 8) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <path
                         d="M67.349,330.545s53.3-70.848,57.285-119.032c4.744-57.444,7.2-62.341,16.366-85.513,20.792-52.544,111.559-107.872,199-21,27.545,27.366-56.429,77.091-80,77-5.88-.023-27.606-50.825-62.636-7.357C158.14,223.315,150.356,285.98,72,334"
                         fill="none"
@@ -242,7 +245,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Menhir
         if (markerId === 9) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <g>
                         <path
                             d="M133,346s20.529-218.85,18-237c-2.806-20.138,54.828-73.571,80-56,19.608,13.686,26.084,40.323,21,73-4.46,28.672,34.392,125.732,24,178-6.141,30.889-8,46-8,46"
@@ -262,7 +265,7 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         // Amaro
         if (markerId === 10) {
             return (
-                <svg className="mini-logo-svg" width={size} height={size} viewBox="0 0 400 400">
+                <svg className="mini-logo-svg" style={sizeStyle} viewBox="0 0 400 400">
                     <g>
                         <path
                             d="M379,226H99L44,271H350"
@@ -291,7 +294,9 @@ const MiniLogo: React.FC<MiniLogoProps> = ({
         }
 
         return null;
-    }; return (
+    };
+
+    return (
         <div
             className={getClassName()}
             data-logo-id={markerId}
