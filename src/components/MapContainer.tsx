@@ -8,6 +8,7 @@ import RoundedCard from './RoundedCard';
 import Image from './Image';
 import WelcomeCard from './WelcomeCard';
 import InfoButton from './InfoButton';
+import Logo from './Logo';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -560,6 +561,11 @@ const MapContainer: React.FC = () => {
             {/* Info Button */}
             {showWelcomeCard && (
                 <InfoButton onClick={handleInfoButtonClick} />
+            )}
+
+            {/* Logo */}
+            {showWelcomeCard && (
+                <Logo />
             )}
 
             {/* Welcome Card */}

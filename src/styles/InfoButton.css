@@ -12,7 +12,7 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
     z-index: 10010;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
@@ -24,10 +24,12 @@
     background: #219a52;
     transform: translateZ(0) scale(1.1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .info-button:active {
     transform: translateZ(0) scale(0.95);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
 }
 
 .info-icon {
