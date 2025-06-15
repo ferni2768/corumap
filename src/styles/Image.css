@@ -58,10 +58,8 @@
 }
 
 .image-component {
-    background: rgba(255, 255, 255, 1);
-
-    /* Content styling */
-    padding: var(--image-padding);
+    background: transparent;
+    padding: 0;
     color: #333;
     display: flex;
     align-items: center;
@@ -75,8 +73,8 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
-    /* Hardware acceleration */
     will-change: transform;
+    overflow: hidden;
 }
 
 /* Force Superellipse to fill container */
@@ -88,24 +86,66 @@
     justify-content: center !important;
 }
 
+.image-component>* {
+    background: transparent !important;
+    opacity: 1 !important;
+}
+
 .image-content {
-    text-align: center;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100%;
+    height: 100%;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
     position: relative;
     overflow: hidden;
+    border-radius: inherit;
 }
 
 .image-element {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     border-radius: inherit;
     will-change: auto;
     backface-visibility: hidden;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    filter: none;
+}
+
+.image-element.loading {
+    opacity: 1;
+    filter: none;
+    transition: all 0.4s ease;
+}
+
+.image-element.thumbnail {
+    opacity: 1;
+    filter: none;
+    transition: all 0.3s ease;
+}
+
+.image-element.expanding {
+    opacity: 1;
+    filter: blur(0.5vmin);
+    transition: all 0.3s ease;
+}
+
+.image-element.full {
+    opacity: 1;
+    filter: none;
+    transition: all 0.3s ease;
+}
+
+.image-element.error {
+    opacity: 0.6;
+    filter: grayscale(100%) brightness(0.7);
+    transition: all 0.3s ease;
 }
 
 .image-placeholder {
@@ -114,12 +154,36 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: #fff;
     font-size: var(--image-font-size);
     border-radius: inherit;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     will-change: auto;
     backface-visibility: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.image-placeholder.loading {
+    filter: blur(8px);
+    transition: all 0.4s ease;
+}
+
+.image-placeholder span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+    max-width: 90%;
+    position: relative;
+    z-index: 1;
 }
 
 .image-overlay {
@@ -214,17 +278,22 @@
     will-change: auto;
 }
 
-/* Content for each image */
-.image-wrapper.image-1 .image-placeholder::before {
-    content: "📸 Image 1";
+/* Ensure images display correctly */
+.image-wrapper img,
+.image-content img,
+.image-element {
+    opacity: 1 !important;
+    background-color: transparent !important;
+    mix-blend-mode: normal !important;
+    backface-visibility: visible !important;
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
-.image-wrapper.image-2 .image-placeholder::before {
-    content: "🖼️ Image 2";
-}
-
-.image-wrapper.image-3 .image-placeholder::before {
-    content: "🎨 Image 3";
+/* Allow blur during expansion */
+.image-element.expanding {
+    filter: blur(0.5vmin) !important;
+    -webkit-filter: blur(0.5vmin) !important;
 }
 
 /* Responsive positioning  */
@@ -372,7 +441,31 @@
     }
 }
 
+/* Ensure superellipse properly clips image content */
+.image-wrapper .image-component,
+.image-wrapper .image-content,
+.image-wrapper .image-element,
+.image-wrapper .image-placeholder {
+    border-radius: inherit;
+    overflow: hidden;
+}
+
 /* Non-expanded images stay below overlay when another image is expanded */
 body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsing):not(.preparing-expand) {
     z-index: 10000 !important;
+}
+
+/* Force correct image display - override any conflicting styles */
+.image-element,
+.image-content img {
+    opacity: 1 !important;
+    transform: none !important;
+    mix-blend-mode: normal !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Allow filter for blur transitions */
+.image-element.expanding {
+    filter: blur(0.5vmin) !important;
 }

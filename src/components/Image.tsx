@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Superellipse from 'react-superellipse';
 import { Preset } from "react-superellipse";
+import { getThumbnailPath, getFullImageUrl, preloadImage } from '../utils/imageUtils';
 import '../styles/Image.css';
 
 interface ImageProps {
@@ -8,17 +9,24 @@ interface ImageProps {
     src?: string;
     alt?: string;
     style?: React.CSSProperties;
+    locationName?: string;
+    imageIndex?: number;
+    locationId?: number;
 }
 
 const Image: React.FC<ImageProps> = ({
     className = '',
     src,
     alt = 'Image placeholder',
-    style
+    style,
+    locationName,
+    imageIndex = 1,
+    locationId = 1
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [animationState, setAnimationState] = useState<'idle' | 'expanding' | 'collapsing' | 'preparing'>('idle');
-    const [allowTransitions, setAllowTransitions] = useState(true);
+    const [allowTransitions, setAllowTransitions] = useState(true); const [currentImageSrc, setCurrentImageSrc] = useState<string>('');
+    const [imageLoadState, setImageLoadState] = useState<'loading' | 'thumbnail' | 'expanding' | 'full' | 'error'>('loading');
     const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
     const transitionTimeoutRef = useRef<NodeJS.Timeout>();
@@ -216,6 +224,68 @@ const Image: React.FC<ImageProps> = ({
         return classes.join(' ');
     };
 
+    // Progressive image loading effect
+    useEffect(() => {
+        const loadImages = async () => {
+            if (src) {
+                setCurrentImageSrc(src);
+                setImageLoadState('thumbnail');
+                return;
+            }
+
+            try {
+                // Step 1: Load thumbnail immediately
+                const thumbnailPath = getThumbnailPath(locationId, imageIndex);
+                setCurrentImageSrc(thumbnailPath);
+                setImageLoadState('thumbnail');
+
+                // Step 2: Preload full-resolution image in background
+                const fullImageUrl = getFullImageUrl(locationId, imageIndex);
+                preloadImage(fullImageUrl).catch((error) => {
+                    console.warn('Failed to preload full image:', error);
+                });
+
+                // Step 3: Switch to full image when expanded, handled in expansion logic
+            } catch (error) {
+                console.warn(`Failed to load images for location ${locationId}, image ${imageIndex}:`, error);
+                setImageLoadState('error');
+            }
+        };
+
+        loadImages();
+    }, [src, locationId, imageIndex]);
+
+    // Switch to full image when expanded
+    useEffect(() => {
+        if (isExpanded && imageLoadState === 'thumbnail') {
+            // Step 1: Start expanding state (blur the thumbnail)
+            setImageLoadState('expanding');
+
+            // Step 2: Load full image and wait for it to actually load
+            const fullImageUrl = getFullImageUrl(locationId, imageIndex);
+
+            // Create new image element to ensure it's fully loaded
+            const img = new window.Image();
+            img.onload = () => {
+                setCurrentImageSrc(fullImageUrl);
+                setImageLoadState('full');
+            };
+            img.onerror = () => {
+                setImageLoadState('thumbnail');
+            };
+            img.src = fullImageUrl;
+
+        } else if (!isExpanded && imageLoadState === 'full') {
+            // Switch back to thumbnail when collapsed
+            const thumbnailPath = getThumbnailPath(locationId, imageIndex);
+            setCurrentImageSrc(thumbnailPath);
+            setImageLoadState('thumbnail');
+        } else if (!isExpanded && imageLoadState === 'expanding') {
+            // If collapsed during expanding, go back to thumbnail
+            setImageLoadState('thumbnail');
+        }
+    }, [isExpanded, locationId, imageIndex, imageLoadState]);
+
     return (
         <>
             {isExpanded && (
@@ -244,11 +314,21 @@ const Image: React.FC<ImageProps> = ({
                     }}
                 >
                     <div className="image-content">
-                        {src ? (
-                            <img src={src} alt={alt} className="image-element" />
+                        {currentImageSrc ? (
+                            <img
+                                src={currentImageSrc}
+                                alt={alt}
+                                className={`image-element ${imageLoadState}`}
+                            />
                         ) : (
-                            <div className="image-placeholder">
-                                {/* Placeholder content */}
+                            <div className={`image-placeholder ${imageLoadState}`}>
+                                {imageLoadState === 'loading' ? (
+                                    <span>Loading...</span>
+                                ) : imageLoadState === 'error' ? (
+                                    <span>Failed to load</span>
+                                ) : (
+                                    <span>Image {imageIndex} from {locationName || 'Unknown Location'}</span>
+                                )}
                             </div>
                         )}
                     </div>

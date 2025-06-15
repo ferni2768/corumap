@@ -530,16 +530,25 @@ const MapContainer: React.FC = () => {
                         <Image
                             className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
                             alt="Image 1"
+                            locationName={currentMarkerLocation}
+                            locationId={currentMarkerId}
+                            imageIndex={1}
                             style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
                         />
                         <Image
                             className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
                             alt="Image 2"
+                            locationName={currentMarkerLocation}
+                            locationId={currentMarkerId}
+                            imageIndex={2}
                             style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
                         />
                         <Image
                             className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
                             alt="Image 3"
+                            locationName={currentMarkerLocation}
+                            locationId={currentMarkerId}
+                            imageIndex={3}
                             style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
                         />
                     </div>
