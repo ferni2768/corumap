@@ -25,8 +25,13 @@ const Image: React.FC<ImageProps> = ({
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [animationState, setAnimationState] = useState<'idle' | 'expanding' | 'collapsing' | 'preparing'>('idle');
-    const [allowTransitions, setAllowTransitions] = useState(true); const [currentImageSrc, setCurrentImageSrc] = useState<string>('');
+    const [allowTransitions, setAllowTransitions] = useState(true);
+    const [thumbnailSrc, setThumbnailSrc] = useState<string>('');
+    const [fullImageSrc, setFullImageSrc] = useState<string>('');
     const [imageLoadState, setImageLoadState] = useState<'loading' | 'thumbnail' | 'expanding' | 'full' | 'error'>('loading');
+    const [showFullImage, setShowFullImage] = useState(false);
+    const [fadeOutThumbnail, setFadeOutThumbnail] = useState(false);
+    const [fullImageLoaded, setFullImageLoaded] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
     const transitionTimeoutRef = useRef<NodeJS.Timeout>();
@@ -95,6 +100,13 @@ const Image: React.FC<ImageProps> = ({
         if (animationState !== 'idle' && animationState !== 'expanding') return;
 
         clearAnimationTimeout();
+
+        // Reset image states immediately when starting collapse
+        setShowFullImage(false);
+        setFadeOutThumbnail(false);
+        if (imageLoadState === 'full' || imageLoadState === 'expanding') {
+            setImageLoadState('thumbnail');
+        }
 
         // Enable transitions for the close animation
         setAllowTransitions(true);
@@ -228,7 +240,7 @@ const Image: React.FC<ImageProps> = ({
     useEffect(() => {
         const loadImages = async () => {
             if (src) {
-                setCurrentImageSrc(src);
+                setThumbnailSrc(src);
                 setImageLoadState('thumbnail');
                 return;
             }
@@ -236,18 +248,24 @@ const Image: React.FC<ImageProps> = ({
             try {
                 // Step 1: Load thumbnail immediately
                 const thumbnailPath = getThumbnailPath(locationId, imageIndex);
-                setCurrentImageSrc(thumbnailPath);
+                setThumbnailSrc(thumbnailPath);
                 setImageLoadState('thumbnail');
 
                 // Step 2: Preload full-resolution image in background
                 const fullImageUrl = getFullImageUrl(locationId, imageIndex);
-                preloadImage(fullImageUrl).catch((error) => {
-                    console.warn('Failed to preload full image:', error);
-                });
+                setFullImageSrc(fullImageUrl);
+
+                // Check if image is already loaded
+                preloadImage(fullImageUrl)
+                    .then(() => {
+                        setFullImageLoaded(true);
+                    })
+                    .catch(() => {
+                        setFullImageLoaded(false);
+                    });
 
                 // Step 3: Switch to full image when expanded, handled in expansion logic
             } catch (error) {
-                console.warn(`Failed to load images for location ${locationId}, image ${imageIndex}:`, error);
                 setImageLoadState('error');
             }
         };
@@ -255,36 +273,80 @@ const Image: React.FC<ImageProps> = ({
         loadImages();
     }, [src, locationId, imageIndex]);
 
-    // Switch to full image when expanded
+    // Switch to full image when expanded with smooth fade
     useEffect(() => {
         if (isExpanded && imageLoadState === 'thumbnail') {
             // Step 1: Start expanding state (blur the thumbnail)
             setImageLoadState('expanding');
 
-            // Step 2: Load full image and wait for it to actually load
-            const fullImageUrl = getFullImageUrl(locationId, imageIndex);
+            // Check if full image is already loaded
+            if (fullImageLoaded) {
+                // Image is already preloaded, show it underneath
+                setShowFullImage(true);
+                // Wait for the actual DOM image element to be fully loaded
+                const checkImageReady = () => {
+                    const fullImageElement = document.querySelector('.image-element.full') as HTMLImageElement;
+                    if (fullImageElement && fullImageElement.complete && fullImageElement.naturalHeight !== 0) {
+                        // Image is fully loaded and rendered, now we can fade out
+                        requestAnimationFrame(() => {
+                            setFadeOutThumbnail(true);
+                        });
+                    } else {
+                        // Check again in next frame
+                        requestAnimationFrame(checkImageReady);
+                    }
+                };
+                requestAnimationFrame(checkImageReady);
+            } else {
+                // Step 2: Load full image and wait for it to actually load
+                const img = new window.Image();
+                img.onload = () => {
+                    // Show full image underneath
+                    setShowFullImage(true);
+                    setFullImageLoaded(true);
+                    // Wait for the actual DOM image element to be fully loaded and rendered
+                    const checkImageReady = () => {
+                        const fullImageElement = document.querySelector('.image-element.full') as HTMLImageElement;
+                        if (fullImageElement && fullImageElement.complete && fullImageElement.naturalHeight !== 0) {
+                            // Image is fully loaded and rendered, now we can fade out
+                            requestAnimationFrame(() => {
+                                setFadeOutThumbnail(true);
+                            });
+                        } else {
+                            // Check again in next frame
+                            requestAnimationFrame(checkImageReady);
+                        }
+                    };
+                    requestAnimationFrame(checkImageReady);
+                };
+                img.onerror = () => {
+                    setImageLoadState('thumbnail');
+                    setShowFullImage(false);
+                };
+                img.src = fullImageSrc;
+            }
 
-            // Create new image element to ensure it's fully loaded
-            const img = new window.Image();
-            img.onload = () => {
-                setCurrentImageSrc(fullImageUrl);
-                setImageLoadState('full');
-            };
-            img.onerror = () => {
+        } else if (!isExpanded) {
+            // Reset all states when collapsed - ensure clean state
+            setShowFullImage(false);
+            setFadeOutThumbnail(false);
+            if (imageLoadState === 'expanding') {
                 setImageLoadState('thumbnail');
-            };
-            img.src = fullImageUrl;
-
-        } else if (!isExpanded && imageLoadState === 'full') {
-            // Switch back to thumbnail when collapsed
-            const thumbnailPath = getThumbnailPath(locationId, imageIndex);
-            setCurrentImageSrc(thumbnailPath);
-            setImageLoadState('thumbnail');
-        } else if (!isExpanded && imageLoadState === 'expanding') {
-            // If collapsed during expanding, go back to thumbnail
-            setImageLoadState('thumbnail');
+            }
         }
-    }, [isExpanded, locationId, imageIndex, imageLoadState]);
+    }, [isExpanded, locationId, imageIndex, imageLoadState, fullImageSrc, fullImageLoaded]);
+
+    // Clean up fade state when animation completes
+    useEffect(() => {
+        if (fadeOutThumbnail) {
+            const cleanup = setTimeout(() => {
+                // After 0.3s fade completes, we can set to 'full' state
+                setImageLoadState('full');
+            }, 300);
+
+            return () => clearTimeout(cleanup);
+        }
+    }, [fadeOutThumbnail]);
 
     return (
         <>
@@ -314,13 +376,26 @@ const Image: React.FC<ImageProps> = ({
                     }}
                 >
                     <div className="image-content">
-                        {currentImageSrc ? (
+                        {/* Full resolution image (shown underneath when ready) */}
+                        {showFullImage && fullImageSrc && (
                             <img
-                                src={currentImageSrc}
+                                src={fullImageSrc}
                                 alt={alt}
-                                className={`image-element ${imageLoadState}`}
+                                className="image-element full"
                             />
-                        ) : (
+                        )}
+
+                        {/* Thumbnail image (fades out after full image loads) */}
+                        {thumbnailSrc && (
+                            <img
+                                src={thumbnailSrc}
+                                alt={alt}
+                                className={`image-element ${imageLoadState} ${fadeOutThumbnail ? 'fading-out' : ''}`}
+                            />
+                        )}
+
+                        {/* Placeholder when no images available */}
+                        {!thumbnailSrc && (
                             <div className={`image-placeholder ${imageLoadState}`}>
                                 {imageLoadState === 'loading' ? (
                                     <span>Loading...</span>

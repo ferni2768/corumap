@@ -22,12 +22,12 @@ export const getFullImageUrl = (locationId: number, imageIndex: number): string 
 };
 
 // Preload image utility
-export const preloadImage = (url: string): Promise<HTMLImageElement> => {
+export const preloadImage = (src: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-        const img = new HTMLImageElement();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-        img.src = url;
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        img.src = src;
     });
 };
 

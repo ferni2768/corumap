@@ -1,5 +1,5 @@
 :root {
-    --card-blur-amount: 1.5vmax;
+    --card-blur-amount: 2.5vmax;
     --card-padding: 1dvh;
     --card-shadow-size: 0.2dvh;
     --card-arrow-margin: 1.5vmin;
@@ -7,7 +7,7 @@
 
 .rounded-card {
     /* Glassmorphism effect */
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.275);
     backdrop-filter: blur(var(--card-blur-amount));
     -webkit-backdrop-filter: blur(var(--card-blur-amount));
 
@@ -41,6 +41,20 @@
     z-index: 9999;
     padding: 0;
     margin: 0;
+}
+
+/* Create shadow using pseudo-element */
+.rounded-card-container::before {
+    content: '';
+    position: absolute;
+    top: 2vmin;
+    left: 0vmin;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    filter: blur(1vmin);
+    z-index: -1;
+    pointer-events: none;
 }
 
 .rounded-card-container.debug {

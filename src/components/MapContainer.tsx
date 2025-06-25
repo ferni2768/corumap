@@ -80,7 +80,9 @@ const MapContainer: React.FC = () => {
     const [loadingFadingOut, setLoadingFadingOut] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
-    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null); const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench'); const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
+    const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
+    const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0);
     const [currentMarkerId, setCurrentMarkerId] = useState<number>(1);
     const [fastAnimation, setFastAnimation] = useState<boolean>(false);
     const [animationDirection, setAnimationDirection] = useState<'forward' | 'backward'>('forward');
