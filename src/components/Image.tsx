@@ -132,7 +132,6 @@ const Image: React.FC<ImageProps> = ({
                     const newImageElement = document.querySelector('.image-element.loading-for-crossfade') as HTMLImageElement;
 
                     if (newImageElement && newImageElement.complete && newImageElement.naturalHeight !== 0) {
-                        console.log('DOM image ready, starting crossfade');
                         setApplyCrossfadeClasses(true);
                     } else {
                         // Keep checking until DOM image is ready

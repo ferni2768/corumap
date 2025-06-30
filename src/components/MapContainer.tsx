@@ -288,12 +288,12 @@ const MapContainer: React.FC = () => {
                     setShowWelcomeCard(true);
                     setTimeout(() => setShowMarkers(true), 200);
                     setTimeout(() => setShowCurve(true), 1000);
-                    setTimeout(() => setShowAnimatedPath(true), 2100);
-                    setTimeout(() => setShowImages(true), 1300);
-                    setTimeout(() => setShowRoundedCard(true), 1600); setTimeout(() => setWelcomingAnimationComplete(true), 2950);
+                    setTimeout(() => setShowAnimatedPath(true), 1750);
+                    setTimeout(() => setShowImages(true), 800);
+                    setTimeout(() => setShowRoundedCard(true), 1200); setTimeout(() => setWelcomingAnimationComplete(true), 2550);
 
                     if (!hasSeenWelcome()) {
-                        setTimeout(() => setWelcomeCardVisible(true), 2350);
+                        setTimeout(() => setWelcomeCardVisible(true), 3000);
                     }
                 };
 
