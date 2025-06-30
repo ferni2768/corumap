@@ -257,8 +257,6 @@ const MapContainer: React.FC = () => {
 
                     // Start fade out transition for loading screen
                     setLoadingFadingOut(true);
-
-                    // Complete loading transition after fade animation
                     setTimeout(() => {
                         setLoading(false);
                     }, 800);

@@ -21,21 +21,11 @@ export const getFullImageUrl = (locationId: number, imageIndex: number): string 
     return `${GITHUB_CDN_BASE}/${filename}`;
 };
 
-// Preload image utility
-export const preloadImage = (src: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve();
-        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-        img.src = src;
-    });
-};
-
 // Check if image exists (for fallback handling)
 export const imageExists = async (url: string): Promise<boolean> => {
     try {
-        await preloadImage(url);
-        return true;
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
     } catch {
         return false;
     }

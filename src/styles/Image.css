@@ -143,6 +143,12 @@
     -moz-user-drag: none;
     -o-user-drag: none;
     pointer-events: none;
+    /* Force browser cache headers */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
 }
 
 .image-element.loading {
@@ -178,6 +184,73 @@
     filter: blur(0.5vmin);
     transition: opacity 0.3s ease, filter 0.3s ease;
     z-index: 3;
+}
+
+/* Crossfade effects for location changes */
+.image-element.crossfade-out {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: opacity 0.15s ease !important;
+    z-index: 2;
+    animation: crossfadeOut 0.15s ease forwards;
+}
+
+.image-element.crossfade-in {
+    filter: none !important;
+    transition: opacity 0.15s ease !important;
+    z-index: 3;
+    animation: crossfadeIn 0.15s ease forwards;
+}
+
+/* Faster crossfade for cached images */
+.image-element.crossfade-in[data-cached="true"] {
+    transition: opacity 0.08s ease !important;
+    animation: crossfadeInFast 0.08s ease forwards;
+}
+
+.image-element.crossfade-out[data-cached="true"] {
+    transition: opacity 0.08s ease !important;
+    animation: crossfadeOutFast 0.08s ease forwards;
+}
+
+@keyframes crossfadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes crossfadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes crossfadeOutFast {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes crossfadeInFast {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .image-placeholder {
@@ -311,9 +384,9 @@
 }
 
 /* Ensure images display correctly */
-.image-wrapper img,
-.image-content img,
-.image-element {
+.image-wrapper img:not(.crossfade-out):not(.crossfade-in):not(.fading-out),
+.image-content img:not(.crossfade-out):not(.crossfade-in):not(.fading-out),
+.image-element:not(.crossfade-out):not(.crossfade-in):not(.fading-out) {
     opacity: 1 !important;
     background-color: transparent !important;
     mix-blend-mode: normal !important;
@@ -326,6 +399,60 @@
 .image-element.expanding {
     filter: blur(0.5vmin) !important;
     -webkit-filter: blur(0.5vmin) !important;
+}
+
+/* Optimized image caching and loading */
+.image-element[data-cached="true"] {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    will-change: auto;
+}
+
+/* Force hardware acceleration for cached images */
+.image-element[data-cached="true"]:not(.loading) {
+    transform: translateZ(0);
+}
+
+/* Optimize for instant display from cache */
+.image-element.from-cache {
+    opacity: 1;
+    transition: none !important;
+}
+
+/* Additional cache optimization for Service Worker */
+.image-element {
+    /* Force browser cache headers */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Priority hints for critical images */
+.image-element.priority-high {
+    content-visibility: visible;
+    contain-intrinsic-size: 300px 200px;
+}
+
+/* Cached image optimizations */
+.image-element[data-cached="true"] {
+    opacity: 1;
+    filter: none;
+    animation: none;
+    transition: opacity 0.1s ease;
+    image-rendering: auto;
+    will-change: auto;
+    backface-visibility: hidden;
+}
+
+/* From-cache class for instant display */
+.image-element.from-cache {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: none !important;
+    animation: none !important;
 }
 
 /* Responsive positioning  */
@@ -498,8 +625,8 @@ body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsin
 }
 
 /* Force correct image display - override any conflicting styles */
-.image-element:not(.fading-out),
-.image-content img:not(.fading-out) {
+.image-element:not(.fading-out):not(.crossfade-out):not(.crossfade-in),
+.image-content img:not(.fading-out):not(.crossfade-out):not(.crossfade-in) {
     opacity: 1 !important;
     transform: none !important;
     mix-blend-mode: normal !important;
