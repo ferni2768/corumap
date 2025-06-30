@@ -31,18 +31,18 @@ const Image: React.FC<ImageProps> = ({
     const [imageLoadState, setImageLoadState] = useState<'loading' | 'thumbnail' | 'expanding' | 'full' | 'error'>('loading');
     const [showFullImage, setShowFullImage] = useState(false);
     const [fadeOutThumbnail, setFadeOutThumbnail] = useState(false);
-    const [fullImageLoaded, setFullImageLoaded] = useState(false);
-    const [isLocationChanging, setIsLocationChanging] = useState(false);
+    const [fullImageLoaded, setFullImageLoaded] = useState(false); const [isLocationChanging, setIsLocationChanging] = useState(false);
     const [previousThumbnailSrc, setPreviousThumbnailSrc] = useState<string>('');
     const [newThumbnailSrc, setNewThumbnailSrc] = useState<string>('');
+    const [applyCrossfadeClasses, setApplyCrossfadeClasses] = useState(false);
 
     // Track what should be displayed (separate from loading state)
-    const [displayThumbnailSrc, setDisplayThumbnailSrc] = useState<string>('');
-    const wrapperRef = useRef<HTMLDivElement>(null);
+    const [displayThumbnailSrc, setDisplayThumbnailSrc] = useState<string>(''); const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
     const transitionTimeoutRef = useRef<NodeJS.Timeout>();
     const crossfadeTimeoutRef = useRef<NodeJS.Timeout>();
     const lastLocationIdRef = useRef<number>(locationId || 1);
+    const currentImageLoadRef = useRef<HTMLImageElement | null>(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -94,32 +94,89 @@ const Image: React.FC<ImageProps> = ({
             displayThumbnailSrc &&
             !src) {
 
+            // Cancel any previous image loading
+            if (currentImageLoadRef.current) {
+                currentImageLoadRef.current.onload = null;
+                currentImageLoadRef.current.onerror = null;
+                currentImageLoadRef.current = null;
+            }
+
+            // Clear any pending crossfade timeouts
+            if (crossfadeTimeoutRef.current) {
+                clearTimeout(crossfadeTimeoutRef.current);
+                crossfadeTimeoutRef.current = undefined;
+            }
+
             // Store the current display thumbnail as previous for crossfade
             setPreviousThumbnailSrc(displayThumbnailSrc);
             setIsLocationChanging(true);
+            setApplyCrossfadeClasses(false);
 
             // Load new thumbnail
             const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
             const img = new window.Image();
+            currentImageLoadRef.current = img; img.onload = () => {
+                // Check if this is still the current request (not cancelled)
+                if (currentImageLoadRef.current !== img) {
+                    return;
+                }
 
-            img.onload = () => {
                 setNewThumbnailSrc(newThumbnailPath);
+                // Wait for the actual DOM img element to be fully loaded before applying crossfade classes
+                const checkDOMImageReady = () => {
+                    if (currentImageLoadRef.current !== img) {
+                        return;
+                    }
+
+                    // Look for the new image element with loading-for-crossfade class
+                    const newImageElement = document.querySelector('.image-element.loading-for-crossfade') as HTMLImageElement;
+
+                    if (newImageElement && newImageElement.complete && newImageElement.naturalHeight !== 0) {
+                        console.log('DOM image ready, starting crossfade');
+                        setApplyCrossfadeClasses(true);
+                    } else {
+                        // Keep checking until DOM image is ready
+                        requestAnimationFrame(checkDOMImageReady);
+                    }
+                };
+
+                setTimeout(() => {
+                    // Check one more time if still current
+                    if (currentImageLoadRef.current === img) {
+                        requestAnimationFrame(checkDOMImageReady);
+                    }
+                }, 10);
 
                 // Complete crossfade after animation
                 crossfadeTimeoutRef.current = setTimeout(() => {
+                    // Check if this is still the current request
+                    if (currentImageLoadRef.current !== img) {
+                        return;
+                    }
+
                     // After crossfade, update the display thumbnail and clean up
                     setDisplayThumbnailSrc(newThumbnailPath);
                     setIsLocationChanging(false);
                     setPreviousThumbnailSrc('');
                     setNewThumbnailSrc('');
+                    setApplyCrossfadeClasses(false);
+                    currentImageLoadRef.current = null;
                 }, 200);
             };
+
             img.onerror = () => {
+                // Check if this is still the current request (not cancelled)
+                if (currentImageLoadRef.current !== img) {
+                    return;
+                }
+
                 const fallbackPath = getThumbnailPath(currentLocationId, imageIndex);
                 setDisplayThumbnailSrc(fallbackPath);
                 setIsLocationChanging(false);
                 setPreviousThumbnailSrc('');
                 setNewThumbnailSrc('');
+                setApplyCrossfadeClasses(false);
+                currentImageLoadRef.current = null;
             };
             img.src = newThumbnailPath;
         }
@@ -164,11 +221,14 @@ const Image: React.FC<ImageProps> = ({
     const handleClose = useCallback(() => {
         if (animationState !== 'idle' && animationState !== 'expanding') return;
 
+        // Reset image states immediately when starting collapse    
         clearAnimationTimeout();
-
-        // Reset image states immediately when starting collapse
         setShowFullImage(false);
-        setFadeOutThumbnail(false);
+        setFadeOutThumbnail(false); setIsLocationChanging(false);
+        setPreviousThumbnailSrc('');
+        setNewThumbnailSrc('');
+        setApplyCrossfadeClasses(false);
+
         if (imageLoadState === 'full' || imageLoadState === 'expanding') {
             setImageLoadState('thumbnail');
         }
@@ -463,7 +523,7 @@ const Image: React.FC<ImageProps> = ({
                             <img
                                 src={previousThumbnailSrc}
                                 alt={alt}
-                                className="image-element crossfade-out"
+                                className={`image-element ${applyCrossfadeClasses ? 'crossfade-out' : 'crossfade-ready'}`}
                             />
                         )}
 
@@ -472,7 +532,7 @@ const Image: React.FC<ImageProps> = ({
                             <img
                                 src={newThumbnailSrc}
                                 alt={alt}
-                                className="image-element crossfade-in"
+                                className={`image-element ${applyCrossfadeClasses ? 'crossfade-in' : 'loading-for-crossfade'}`}
                             />
                         )}
 

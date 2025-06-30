@@ -430,13 +430,19 @@ const MapContainer: React.FC = () => {
     const canGoPrevious = welcomingAnimationComplete && currentMarkerIndex > 0;
     const canGoNext = welcomingAnimationComplete && currentMarkerIndex < MARKERS.length - 1;
 
-    // Handle keyboard navigation
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (document.activeElement?.tagName === 'INPUT' ||
                 document.activeElement?.tagName === 'TEXTAREA') {
                 return;
-            } switch (event.key) {
+            }
+
+            // Don't handle arrow keys when an image is expanded
+            if (document.body.classList.contains('image-expanded')) {
+                return;
+            }
+
+            switch (event.key) {
                 case 'ArrowLeft':
                     event.preventDefault();
                     if (currentMarkerIndex > 0) {

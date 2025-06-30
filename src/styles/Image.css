@@ -186,31 +186,52 @@
     z-index: 3;
 }
 
+/* Loading state for new image during crossfade preparation */
+.image-element.loading-for-crossfade {
+    opacity: 0 !important;
+    z-index: 2;
+}
+
 /* Crossfade effects for location changes */
 .image-element.crossfade-out {
-    opacity: 1 !important;
+    opacity: 0 !important;
     filter: none !important;
     transition: opacity 0.15s ease !important;
-    z-index: 2;
-    animation: crossfadeOut 0.15s ease forwards;
+    z-index: 3 !important;
+    will-change: opacity !important;
 }
 
 .image-element.crossfade-in {
+    opacity: 1 !important;
     filter: none !important;
-    transition: opacity 0.15s ease !important;
-    z-index: 3;
-    animation: crossfadeIn 0.15s ease forwards;
+    transition: none !important;
+    z-index: 2 !important;
+}
+
+/* Override loading state when crossfade starts */
+.image-element.loading-for-crossfade.crossfade-in {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: none !important;
+    z-index: 2 !important;
+}
+
+/* Default visible state for old image during crossfade preparation */
+.image-element.crossfade-ready {
+    opacity: 1 !important;
+    filter: none !important;
+    z-index: 3 !important;
 }
 
 /* Faster crossfade for cached images */
 .image-element.crossfade-in[data-cached="true"] {
-    transition: opacity 0.08s ease !important;
-    animation: crossfadeInFast 0.08s ease forwards;
+    opacity: 1 !important;
+    transition: none !important;
 }
 
 .image-element.crossfade-out[data-cached="true"] {
+    opacity: 0 !important;
     transition: opacity 0.08s ease !important;
-    animation: crossfadeOutFast 0.08s ease forwards;
 }
 
 @keyframes crossfadeOut {
