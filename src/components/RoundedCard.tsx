@@ -5,7 +5,6 @@ import '../styles/RoundedCard.css';
 
 interface RoundedCardProps {
     className?: string;
-    showDebugOverlay?: boolean;
     markerLocationText?: string;
     onPreviousMarker?: () => void;
     onNextMarker?: () => void;
@@ -17,7 +16,6 @@ interface RoundedCardProps {
 
 const RoundedCard: React.FC<RoundedCardProps> = ({
     className = '',
-    showDebugOverlay = false,
     markerLocationText = 'No location selected',
     onPreviousMarker,
     onNextMarker,
@@ -26,7 +24,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     fastAnimation = false,
     externalAnimationDirection
 }) => {
-    const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
     const [isAnimating, setIsAnimating] = useState(false);
     const [currentText, setCurrentText] = useState(markerLocationText);
     const [nextText, setNextText] = useState(markerLocationText);
@@ -37,18 +34,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     const pendingDirectionRef = useRef<'forward' | 'backward'>('forward');
     const animationQueueRef = useRef<Array<{ text: string; direction: 'forward' | 'backward' }>>([]);
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-        const handleKeyPress = (event: KeyboardEvent) => {
-            if (event.key === 'd' && event.ctrlKey) {
-                event.preventDefault();
-                setDebugVisible(prev => !prev);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
 
     // Process animation queue
     const processQueue = () => {
@@ -143,7 +128,7 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     }, []);
 
     return (
-        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''}`}>
+        <div className="rounded-card-container">
             <Superellipse
                 className={`rounded-card ${className}`}
                 r1={Preset.iOS.r1}
