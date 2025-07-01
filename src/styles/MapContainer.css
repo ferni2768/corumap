@@ -41,6 +41,22 @@
     image-rendering: crisp-edges;
 }
 
+/* Bottom gradient overlay for visual separation */
+.bottom-gradient-overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100dvw;
+    height: 70dvh;
+    background: linear-gradient(to top,
+            rgba(0, 0, 0, 0.7) 0%,
+            rgba(0, 0, 0, 0.4) 35%,
+            rgba(0, 0, 0, 0.1) 50%,
+            transparent 100%);
+    z-index: 9997;
+    pointer-events: none;
+}
+
 .mapboxgl-map {
     width: 100% !important;
     height: 100% !important;
@@ -479,6 +495,83 @@
 
     .error-help {
         font-size: 1.5vmin;
+    }
+}
+
+/* Responsive adjustments for gradient overlay */
+@media (max-aspect-ratio: 1/1) {
+
+    /* Portrait mode square - adjust gradient for images at 61dvh */
+    .bottom-gradient-overlay {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100dvw;
+        height: 70dvh;
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.6) 0%,
+                rgba(0, 0, 0, 0.4) 35%,
+                rgba(0, 0, 0, 0.1) 50%,
+                transparent 100%);
+        z-index: 9997;
+        pointer-events: none;
+    }
+}
+
+@media (max-aspect-ratio: 9/16) {
+
+    /* Thin portrait mode - adjust gradient for images at 56dvh */
+    .bottom-gradient-overlay {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100dvw;
+        height: 70dvh;
+        background: linear-gradient(to top,
+                rgba(0, 0, 0, 0.6) 0%,
+                rgba(0, 0, 0, 0.4) 40%,
+                rgba(0, 0, 0, 0.1) 60%,
+                transparent 100%);
+        z-index: 9997;
+        pointer-events: none;
+    }
+}
+
+@media (min-aspect-ratio: 3/2) {
+
+    /* Landscape mode - lighter gradient since images are higher */
+    .bottom-gradient-overlay {
+        position: fixed;
+        top: 0;
+        left: 30dvw;
+        width: 70dvw;
+        height: 100dvh;
+        background: linear-gradient(to left,
+                rgba(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 0) 35%,
+                rgba(0, 0, 0, 0) 50%,
+                transparent 100%);
+        z-index: 9997;
+        pointer-events: none;
+    }
+}
+
+@media (min-aspect-ratio: 5/2) {
+
+    /* Very wide landscape - minimal gradient */
+    .bottom-gradient-overlay {
+        position: fixed;
+        top: 0;
+        left: 30dvw;
+        width: 70dvw;
+        height: 100dvh;
+        background: linear-gradient(to left,
+                rgba(0, 0, 0, 0) 0%,
+                rgba(0, 0, 0, 0) 35%,
+                rgba(0, 0, 0, 0) 50%,
+                transparent 100%);
+        z-index: 9997;
+        pointer-events: none;
     }
 }
 

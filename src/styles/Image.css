@@ -22,7 +22,7 @@
     margin: 0;
     cursor: pointer;
     pointer-events: auto;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1), filter 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     transform-origin: center center;
     backface-visibility: hidden;
     transform: translateZ(0);
@@ -38,7 +38,7 @@
     -moz-user-drag: none;
     -o-user-drag: none;
     z-index: 10001;
-    filter: drop-shadow(0 1.5vmin 0.75vmin rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.4)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4));
 }
 
 /* Default landscape positioning */
@@ -364,10 +364,11 @@
 .image-wrapper.expanding {
     position: fixed !important;
     z-index: 10003 !important;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: top, left, width, height;
     contain: layout;
     transform: translateZ(0);
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
 }
 
 /* Base for expanded state with hardware acceleration */
@@ -386,6 +387,7 @@
     transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: auto;
     contain: layout;
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
 }
 
 /* Collapsing state with hardware acceleration */
@@ -396,6 +398,7 @@
     will-change: top, left, width, height;
     contain: layout;
     transform: translateZ(0);
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.5)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4)) !important;
 }
 
 .image-wrapper.expanded .image-component {
@@ -665,4 +668,17 @@ body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsin
 /* Allow filter for blur transitions */
 .image-element.expanding {
     filter: blur(0.5vmin) !important;
+}
+
+/* Smooth transition for drop-shadow opacity */
+.image-wrapper {
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1), filter 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+.image-wrapper.expanding {
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
+}
+
+.image-wrapper.collapsing {
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.2)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4)) !important;
 }
