@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { PixelRatioManager } from '../utils/pixelRatio';
-import { MapStyleInfo, hideAllLabelsForever } from '../utils/mapStyleUtils';
+import { MapStyleInfo, MAP_STYLES, hideAllLabelsForever } from '../utils/mapStyleUtils';
 import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
@@ -98,7 +98,18 @@ const MapContainer: React.FC = () => {
     const [isMapMoving, setIsMapMoving] = useState(false);
     const [showWelcomeCard, setShowWelcomeCard] = useState(false);
     const [welcomeCardVisible, setWelcomeCardVisible] = useState(false);
-    const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/satellite-v9');
+    const [mapStyle, setMapStyle] = useState(() => {
+        // Load saved style index from localStorage, default to 0 if not found
+        const savedStyleIndex = localStorage.getItem('corumap-logoStyleIndex');
+        if (savedStyleIndex !== null) {
+            const index = parseInt(savedStyleIndex, 10);
+            if (index >= 0 && index < MAP_STYLES.length) {
+                return MAP_STYLES[index].url;
+            }
+        }
+        // Default to first style (Satellite)
+        return MAP_STYLES[0].url;
+    });
 
     const hasSeenWelcome = () => {
         return localStorage.getItem('corumap-hasSeenWelcome') === 'true';
@@ -559,6 +570,7 @@ const MapContainer: React.FC = () => {
                                 locationName={currentMarkerLocation}
                                 locationId={currentMarkerId}
                                 imageIndex={1}
+                                fastAnimation={fastAnimation}
                                 style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
                             />
                             <Image
@@ -567,6 +579,7 @@ const MapContainer: React.FC = () => {
                                 locationName={currentMarkerLocation}
                                 locationId={currentMarkerId}
                                 imageIndex={2}
+                                fastAnimation={fastAnimation}
                                 style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
                             />
                             <Image
@@ -575,6 +588,7 @@ const MapContainer: React.FC = () => {
                                 locationName={currentMarkerLocation}
                                 locationId={currentMarkerId}
                                 imageIndex={3}
+                                fastAnimation={fastAnimation}
                                 style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
                             />
                         </div>

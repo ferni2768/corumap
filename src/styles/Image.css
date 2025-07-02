@@ -186,41 +186,33 @@
     z-index: 3;
 }
 
-/* Loading state for new image during crossfade preparation */
-.image-element.loading-for-crossfade {
-    opacity: 0 !important;
-    z-index: 2;
-}
-
-/* Crossfade effects for location changes */
+/* Simple crossfade states */
 .image-element.crossfade-out {
     opacity: 0 !important;
-    filter: none !important;
-    transition: opacity 0.15s ease !important;
-    z-index: 3 !important;
-    will-change: opacity !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 2 !important;
+}
+
+/* Before crossfade starts - old image visible on top */
+.image-element.crossfade-ready {
+    opacity: 1 !important;
+    transition: none !important;
+    z-index: 2 !important;
 }
 
 .image-element.crossfade-in {
     opacity: 1 !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 1 !important;
     filter: none !important;
-    transition: none !important;
-    z-index: 2 !important;
 }
 
-/* Override loading state when crossfade starts */
-.image-element.loading-for-crossfade.crossfade-in {
-    opacity: 1 !important;
-    filter: none !important;
+/* Completely hidden inactive images that stay at 0 opacity */
+.image-element.crossfade-hidden {
+    opacity: 0 !important;
     transition: none !important;
-    z-index: 2 !important;
-}
-
-/* Default visible state for old image during crossfade preparation */
-.image-element.crossfade-ready {
-    opacity: 1 !important;
+    z-index: 1 !important;
     filter: none !important;
-    z-index: 3 !important;
 }
 
 /* Faster crossfade for cached images */
@@ -231,47 +223,7 @@
 
 .image-element.crossfade-out[data-cached="true"] {
     opacity: 0 !important;
-    transition: opacity 0.08s ease !important;
-}
-
-@keyframes crossfadeOut {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
-}
-
-@keyframes crossfadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes crossfadeOutFast {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
-}
-
-@keyframes crossfadeInFast {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+    transition: opacity 0.1s ease !important;
 }
 
 .image-placeholder {
@@ -681,4 +633,33 @@ body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsin
 
 .image-wrapper.collapsing {
     filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.2)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4)) !important;
+}
+
+/* Fast animations for rapid locationId changes */
+.image-element.fast-animation {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.crossfade-out {
+    transition: opacity 0.1s ease !important;
+}
+
+.image-element.fast-animation.crossfade-in {
+    transition: opacity 0.1s ease !important;
+}
+
+.image-element.fast-animation.fading-out {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.thumbnail {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.expanding {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.full {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
 }

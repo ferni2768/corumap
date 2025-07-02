@@ -114,6 +114,14 @@
     transition: none !important;
 }
 
+/* Ensure backward animation incoming text always starts from left - only for INACTIVE elements (incoming text) */
+.card-text-primary.animate-backward.inactive[data-positioned="false"],
+.card-text-secondary.animate-backward.inactive[data-positioned="false"] {
+    transform: translateX(-50%) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
 /* Forward: out left, in from right */
 .card-text-primary.animate-forward.active,
 .card-text-secondary.animate-forward.active {
@@ -142,6 +150,30 @@
     transform: translateX(0%);
     opacity: 1;
     transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+/* Additional safeguards for backward animations with data attributes - only for INACTIVE elements (incoming text) */
+.card-text-primary.inactive[data-animation-direction="backward"][data-positioned="false"],
+.card-text-secondary.inactive[data-animation-direction="backward"][data-positioned="false"] {
+    transform: translateX(-50%) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+/* Ensure proper initial positioning for backward animations */
+.card-text-primary.animate-backward.inactive[data-positioned="true"],
+.card-text-secondary.animate-backward.inactive[data-positioned="true"] {
+    transform: translateX(0%);
+    opacity: 1;
+    transition: transform 0.175s ease-out, opacity 0.0875s ease-out 0.0875s;
+}
+
+/* Ensure outgoing text (active elements) can still animate properly to the right during backward animations */
+.card-text-primary.animate-backward.active[data-positioned="true"],
+.card-text-secondary.animate-backward.active[data-positioned="true"] {
+    transform: translateX(50%);
+    opacity: 0;
+    transition: transform 0.175s ease-in, opacity 0.0875s ease-in;
 }
 
 /* Fast animations for long jumps */
@@ -178,6 +210,22 @@
 .card-text-primary.fast-animation.animate-backward.inactive,
 .card-text-secondary.fast-animation.animate-backward.inactive {
     transition: transform 0.1s ease-out, opacity 0.05s ease-out 0.05s;
+}
+
+/* Fast animation safeguards for backward direction - only for INACTIVE elements (incoming text) */
+.card-text-primary.fast-animation.inactive[data-animation-direction="backward"][data-positioned="false"],
+.card-text-secondary.fast-animation.inactive[data-animation-direction="backward"][data-positioned="false"] {
+    transform: translateX(-50%) !important;
+    opacity: 0 !important;
+    transition: none !important;
+}
+
+/* Ensure outgoing text (active elements) can still animate properly during fast backward animations */
+.card-text-primary.fast-animation.animate-backward.active[data-positioned="true"],
+.card-text-secondary.fast-animation.animate-backward.active[data-positioned="true"] {
+    transform: translateX(50%);
+    opacity: 0;
+    transition: transform 0.1s ease-in, opacity 0.05s ease-in;
 }
 
 .card-arrow {

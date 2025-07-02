@@ -47,9 +47,12 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
 
         if (nextAnimation.direction === 'backward') {
             setIsPositioned(false);
+            // Use double requestAnimationFrame to ensure proper positioning
             requestAnimationFrame(() => {
-                setIsPositioned(true);
-                setIsAnimating(true);
+                requestAnimationFrame(() => {
+                    setIsPositioned(true);
+                    setIsAnimating(true);
+                });
             });
         } else {
             setIsAnimating(true);
@@ -90,7 +93,11 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
         setCurrentText(nextText);
         setPrimaryIsActive(!primaryIsActive);
         setIsAnimating(false);
-        setIsPositioned(true);
+
+        // Ensure isPositioned is always true after animation completes
+        if (!isPositioned) {
+            setIsPositioned(true);
+        }
 
         // Clear any pending timeout and process next in queue
         if (animationTimeoutRef.current) {
@@ -144,14 +151,16 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             <div className="card-content">
                 <div
                     className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && !primaryIsActive ? 'backward-start' : ''}`}
-                    data-positioned={isPositioned}
+                    data-positioned={isPositioned.toString()}
+                    data-animation-direction={animationDirection}
                     onTransitionEnd={primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {primaryIsActive ? currentText : nextText}
                 </div>
                 <div
                     className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && primaryIsActive ? 'backward-start' : ''}`}
-                    data-positioned={isPositioned}
+                    data-positioned={isPositioned.toString()}
+                    data-animation-direction={animationDirection}
                     onTransitionEnd={!primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {!primaryIsActive ? currentText : nextText}

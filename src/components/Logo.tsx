@@ -7,20 +7,25 @@ interface LogoProps {
 }
 
 const Logo: React.FC<LogoProps> = ({ onStyleChange }) => {
-    const [currentStyleIndex, setCurrentStyleIndex] = React.useState(0);
+    // Load saved style index from localStorage, default to 0 if not found
+    const [currentStyleIndex, setCurrentStyleIndex] = React.useState(() => {
+        const savedStyleIndex = localStorage.getItem('corumap-logoStyleIndex');
+        return savedStyleIndex !== null ? parseInt(savedStyleIndex, 10) : 0;
+    });
     const [isChangingStyle, setIsChangingStyle] = React.useState(false);
     const [showHintAnimation, setShowHintAnimation] = React.useState(false);
     const [hasUserInteracted, setHasUserInteracted] = React.useState(() => {
-        return localStorage.getItem('corumap-hasInteractedWithLogo') === 'true';
+        // Check if user has a saved style preference - if so, they've interacted
+        return localStorage.getItem('corumap-logoStyleIndex') !== null;
     });
     const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
-    const markLogoAsInteracted = () => {
-        localStorage.setItem('corumap-hasInteractedWithLogo', 'true');
+    const saveStyleIndex = (index: number) => {
+        localStorage.setItem('corumap-logoStyleIndex', index.toString());
         setHasUserInteracted(true);
     };
 
-    // Set up the hint animation
+    // Set up the hint animation - only if user hasn't interacted (no saved style)
     React.useEffect(() => {
         if (hasUserInteracted) {
             return;
@@ -48,7 +53,6 @@ const Logo: React.FC<LogoProps> = ({ onStyleChange }) => {
 
     const handleClick = () => {
         if (isChangingStyle) return;
-        markLogoAsInteracted();
 
         // Stop any ongoing animations
         setShowHintAnimation(false);
@@ -63,6 +67,7 @@ const Logo: React.FC<LogoProps> = ({ onStyleChange }) => {
         const nextStyle = MAP_STYLES[nextIndex];
 
         setCurrentStyleIndex(nextIndex);
+        saveStyleIndex(nextIndex); // Save the new style index
         onStyleChange(nextStyle);
 
         setTimeout(() => setIsChangingStyle(false), 750); // Prevent rapid clicking

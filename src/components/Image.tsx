@@ -12,6 +12,7 @@ interface ImageProps {
     locationName?: string;
     imageIndex?: number;
     locationId?: number;
+    fastAnimation?: boolean;
 }
 
 const Image: React.FC<ImageProps> = ({
@@ -21,7 +22,8 @@ const Image: React.FC<ImageProps> = ({
     style,
     locationName,
     imageIndex = 1,
-    locationId = 1
+    locationId = 1,
+    fastAnimation = false
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [animationState, setAnimationState] = useState<'idle' | 'expanding' | 'collapsing' | 'preparing'>('idle');
@@ -31,18 +33,25 @@ const Image: React.FC<ImageProps> = ({
     const [imageLoadState, setImageLoadState] = useState<'loading' | 'thumbnail' | 'expanding' | 'full' | 'error'>('loading');
     const [showFullImage, setShowFullImage] = useState(false);
     const [fadeOutThumbnail, setFadeOutThumbnail] = useState(false);
-    const [fullImageLoaded, setFullImageLoaded] = useState(false); const [isLocationChanging, setIsLocationChanging] = useState(false);
-    const [previousThumbnailSrc, setPreviousThumbnailSrc] = useState<string>('');
-    const [newThumbnailSrc, setNewThumbnailSrc] = useState<string>('');
-    const [applyCrossfadeClasses, setApplyCrossfadeClasses] = useState(false);
+    const [fullImageLoaded, setFullImageLoaded] = useState(false);
+    const [crossfadeState, setCrossfadeState] = useState<'idle' | 'loading' | 'transitioning'>('idle');
 
-    // Track what should be displayed (separate from loading state)
-    const [displayThumbnailSrc, setDisplayThumbnailSrc] = useState<string>(''); const wrapperRef = useRef<HTMLDivElement>(null);
+    // Dual image system for seamless crossfade
+    const [primaryImageSrc, setPrimaryImageSrc] = useState<string>('');
+    const [secondaryImageSrc, setSecondaryImageSrc] = useState<string>('');
+    const [activePrimary, setActivePrimary] = useState<boolean>(true);
+    const [transitioningToPrimary, setTransitioningToPrimary] = useState<boolean>(false);
+
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const animationTimeoutRef = useRef<NodeJS.Timeout>();
     const transitionTimeoutRef = useRef<NodeJS.Timeout>();
     const crossfadeTimeoutRef = useRef<NodeJS.Timeout>();
     const lastLocationIdRef = useRef<number>(locationId || 1);
     const currentImageLoadRef = useRef<HTMLImageElement | null>(null);
+    const pendingLocationIdRef = useRef<number | null>(null);
+    const mainImageLoadRef = useRef<{ thumbnail: HTMLImageElement | null; full: HTMLImageElement | null } | null>(null);
+    const crossfadeDebounceRef = useRef<NodeJS.Timeout | null>(null);
+    const expansionImageLoadRef = useRef<HTMLImageElement | null>(null);
 
     useEffect(() => {
         const handleResize = () => {
@@ -82,7 +91,7 @@ const Image: React.FC<ImageProps> = ({
         };
     }, [isExpanded]);
 
-    // Handle locationId changes with crossfade effect
+    // Handle locationId changes with seamless dual-image crossfade effect
     useLayoutEffect(() => {
         const currentLocationId = locationId || 1;
         const lastLocationId = lastLocationIdRef.current;
@@ -91,10 +100,16 @@ const Image: React.FC<ImageProps> = ({
         if (currentLocationId !== lastLocationId &&
             animationState === 'idle' &&
             !isExpanded &&
-            displayThumbnailSrc &&
+            (primaryImageSrc || secondaryImageSrc) &&
             !src) {
 
-            // Cancel any previous image loading
+            // Clear any previous debounce timeout
+            if (crossfadeDebounceRef.current) {
+                clearTimeout(crossfadeDebounceRef.current);
+                crossfadeDebounceRef.current = null;
+            }
+
+            // Cancel any previous image loading and timeouts
             if (currentImageLoadRef.current) {
                 currentImageLoadRef.current.onload = null;
                 currentImageLoadRef.current.onerror = null;
@@ -107,89 +122,113 @@ const Image: React.FC<ImageProps> = ({
                 crossfadeTimeoutRef.current = undefined;
             }
 
-            // Store the current display thumbnail as previous for crossfade
-            setPreviousThumbnailSrc(displayThumbnailSrc);
-            setIsLocationChanging(true);
-            setApplyCrossfadeClasses(false);
-
-            // Load new thumbnail
-            const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
-            const img = new window.Image();
-            currentImageLoadRef.current = img; img.onload = () => {
-                // Check if this is still the current request (not cancelled)
-                if (currentImageLoadRef.current !== img) {
+            // Debounce rapid locationId changes for crossfade
+            crossfadeDebounceRef.current = setTimeout(() => {
+                // Double-check that this is still the desired locationId
+                if (pendingLocationIdRef.current !== currentLocationId) {
                     return;
                 }
 
-                setNewThumbnailSrc(newThumbnailPath);
-                // Wait for the actual DOM img element to be fully loaded before applying crossfade classes
-                const checkDOMImageReady = () => {
-                    if (currentImageLoadRef.current !== img) {
+                setCrossfadeState('loading');
+                const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
+                const img = new window.Image();
+                currentImageLoadRef.current = img;
+
+                img.onload = () => {
+                    // Check if this is still the current request and matches pending locationId
+                    if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
                         return;
                     }
 
-                    // Look for the new image element with loading-for-crossfade class
-                    const newImageElement = document.querySelector('.image-element.loading-for-crossfade') as HTMLImageElement;
-
-                    if (newImageElement && newImageElement.complete && newImageElement.naturalHeight !== 0) {
-                        setApplyCrossfadeClasses(true);
+                    // Load the new image into the inactive slot
+                    if (activePrimary) {
+                        setSecondaryImageSrc(newThumbnailPath);
                     } else {
-                        // Keep checking until DOM image is ready
-                        requestAnimationFrame(checkDOMImageReady);
+                        setPrimaryImageSrc(newThumbnailPath);
+                    }
+
+                    // Wait for the new image element to be fully rendered in the DOM
+                    const waitForImageRender = () => {
+                        // Double-check if this is still the current request
+                        if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
+                            return;
+                        }
+
+                        const newImageElement = document.querySelector(activePrimary ? '.image-element.secondary' : '.image-element.primary') as HTMLImageElement;
+
+                        if (newImageElement &&
+                            newImageElement.complete &&
+                            newImageElement.naturalHeight !== 0 &&
+                            newImageElement.offsetHeight > 0) {
+
+                            // Image is fully rendered, now we can start crossfade
+                            if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                setCrossfadeState('transitioning');
+
+                                // Complete transition after animation
+                                crossfadeTimeoutRef.current = setTimeout(() => {
+                                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                        // Start transitioning to the new image
+                                        setTransitioningToPrimary(!activePrimary);
+
+                                        // After a brief moment, complete the swap
+                                        setTimeout(() => {
+                                            // Final check before completing transition
+                                            if (pendingLocationIdRef.current === currentLocationId) {
+                                                setActivePrimary(!activePrimary);
+                                                setTransitioningToPrimary(false);
+                                                setCrossfadeState('idle');
+                                                currentImageLoadRef.current = null;
+                                                pendingLocationIdRef.current = null;
+                                            }
+                                        }, fastAnimation ? 100 : 200);
+                                    }
+                                }, fastAnimation ? 100 : 200);
+                            }
+                        } else {
+                            // Keep checking until image is fully rendered, but only if still current
+                            if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                requestAnimationFrame(waitForImageRender);
+                            }
+                        }
+                    };
+
+                    // Start checking after DOM update
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(waitForImageRender);
+                    });
+                };
+
+                img.onerror = () => {
+                    // On error, reset state only if this is still the current request
+                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                        setCrossfadeState('idle');
+                        currentImageLoadRef.current = null;
+                        pendingLocationIdRef.current = null;
                     }
                 };
 
-                setTimeout(() => {
-                    // Check one more time if still current
-                    if (currentImageLoadRef.current === img) {
-                        requestAnimationFrame(checkDOMImageReady);
-                    }
-                }, 10);
+                img.src = newThumbnailPath;
+            }, fastAnimation ? 10 : 50); // Shorter debounce for fast animations
 
-                // Complete crossfade after animation
-                crossfadeTimeoutRef.current = setTimeout(() => {
-                    // Check if this is still the current request
-                    if (currentImageLoadRef.current !== img) {
-                        return;
-                    }
-
-                    // After crossfade, update the display thumbnail and clean up
-                    setDisplayThumbnailSrc(newThumbnailPath);
-                    setIsLocationChanging(false);
-                    setPreviousThumbnailSrc('');
-                    setNewThumbnailSrc('');
-                    setApplyCrossfadeClasses(false);
-                    currentImageLoadRef.current = null;
-                }, 200);
-            };
-
-            img.onerror = () => {
-                // Check if this is still the current request (not cancelled)
-                if (currentImageLoadRef.current !== img) {
-                    return;
-                }
-
-                const fallbackPath = getThumbnailPath(currentLocationId, imageIndex);
-                setDisplayThumbnailSrc(fallbackPath);
-                setIsLocationChanging(false);
-                setPreviousThumbnailSrc('');
-                setNewThumbnailSrc('');
-                setApplyCrossfadeClasses(false);
-                currentImageLoadRef.current = null;
-            };
-            img.src = newThumbnailPath;
+            // Set the pending locationId immediately
+            pendingLocationIdRef.current = currentLocationId;
         }
 
-        // Update the ref to track current locationId
-        lastLocationIdRef.current = currentLocationId;
-    }, [locationId, animationState, isExpanded, displayThumbnailSrc, imageIndex, src]);
+        // Only update the ref after we've started processing the change
+        // This prevents race conditions with rapid changes
+        if (pendingLocationIdRef.current === null || pendingLocationIdRef.current === currentLocationId) {
+            lastLocationIdRef.current = currentLocationId;
+        }
+    }, [locationId, animationState, isExpanded, primaryImageSrc, secondaryImageSrc, imageIndex, src, activePrimary]);
 
-    // Sync displayThumbnailSrc with thumbnailSrc when not crossfading
+    // Initialize first image when thumbnailSrc is loaded and slots are empty
     useEffect(() => {
-        if (!isLocationChanging && thumbnailSrc && thumbnailSrc !== displayThumbnailSrc) {
-            setDisplayThumbnailSrc(thumbnailSrc);
+        if (crossfadeState === 'idle' && thumbnailSrc && !primaryImageSrc && !secondaryImageSrc) {
+            setPrimaryImageSrc(thumbnailSrc);
+            setActivePrimary(true);
         }
-    }, [thumbnailSrc, isLocationChanging, displayThumbnailSrc]);
+    }, [thumbnailSrc, crossfadeState, primaryImageSrc, secondaryImageSrc]);
 
     const setInitialPosition = useCallback(() => {
         if (!wrapperRef.current) return;
@@ -215,6 +254,43 @@ const Image: React.FC<ImageProps> = ({
             clearTimeout(crossfadeTimeoutRef.current);
             crossfadeTimeoutRef.current = undefined;
         }
+
+        // Cancel crossfade image loading
+        if (currentImageLoadRef.current) {
+            currentImageLoadRef.current.onload = null;
+            currentImageLoadRef.current.onerror = null;
+            currentImageLoadRef.current = null;
+        }
+
+        // Cancel debounce timeout
+        if (crossfadeDebounceRef.current) {
+            clearTimeout(crossfadeDebounceRef.current);
+            crossfadeDebounceRef.current = null;
+        }
+
+        // Cancel main image loading requests
+        if (mainImageLoadRef.current) {
+            if (mainImageLoadRef.current.thumbnail) {
+                mainImageLoadRef.current.thumbnail.onload = null;
+                mainImageLoadRef.current.thumbnail.onerror = null;
+            }
+            if (mainImageLoadRef.current.full) {
+                mainImageLoadRef.current.full.onload = null;
+                mainImageLoadRef.current.full.onerror = null;
+            }
+            mainImageLoadRef.current = null;
+        }
+
+        // Cancel expansion image loading
+        if (expansionImageLoadRef.current) {
+            expansionImageLoadRef.current.onload = null;
+            expansionImageLoadRef.current.onerror = null;
+            expansionImageLoadRef.current = null;
+        }
+
+        // Clear pending location reference
+        pendingLocationIdRef.current = null;
+        setCrossfadeState('idle');
     }, []);
 
     const handleClose = useCallback(() => {
@@ -223,10 +299,10 @@ const Image: React.FC<ImageProps> = ({
         // Reset image states immediately when starting collapse    
         clearAnimationTimeout();
         setShowFullImage(false);
-        setFadeOutThumbnail(false); setIsLocationChanging(false);
-        setPreviousThumbnailSrc('');
-        setNewThumbnailSrc('');
-        setApplyCrossfadeClasses(false);
+        setFadeOutThumbnail(false);
+
+        // Reset crossfade state
+        setCrossfadeState('idle');
 
         if (imageLoadState === 'full' || imageLoadState === 'expanding') {
             setImageLoadState('thumbnail');
@@ -369,35 +445,81 @@ const Image: React.FC<ImageProps> = ({
                 return;
             }
 
+            // Cancel any previous main image loading requests
+            if (mainImageLoadRef.current) {
+                if (mainImageLoadRef.current.thumbnail) {
+                    mainImageLoadRef.current.thumbnail.onload = null;
+                    mainImageLoadRef.current.thumbnail.onerror = null;
+                }
+                if (mainImageLoadRef.current.full) {
+                    mainImageLoadRef.current.full.onload = null;
+                    mainImageLoadRef.current.full.onerror = null;
+                }
+                mainImageLoadRef.current = null;
+            }
+
             try {
+                // Create new image loading refs for this request
+                const thumbnailImg = new window.Image();
+                const fullImg = new window.Image();
+
+                mainImageLoadRef.current = {
+                    thumbnail: thumbnailImg,
+                    full: fullImg
+                };
+
+                const currentLocationId = locationId;
+                const currentImageIndex = imageIndex;
+
                 // Load thumbnail
-                const thumbnailPath = getThumbnailPath(locationId, imageIndex);
+                const thumbnailPath = getThumbnailPath(currentLocationId, currentImageIndex);
                 setThumbnailSrc(thumbnailPath);
                 setImageLoadState('loading');
 
-                // Load thumbnail
-                const img = new window.Image();
-                img.onload = () => {
-                    setImageLoadState('thumbnail');
+                thumbnailImg.onload = () => {
+                    // Check if this is still the current request
+                    if (mainImageLoadRef.current?.thumbnail === thumbnailImg &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex) {
+                        setImageLoadState('thumbnail');
+                    }
                 };
-                img.onerror = () => {
-                    setImageLoadState('error');
-                };
-                img.src = thumbnailPath;
 
-                // Set full image URL
-                const fullImageUrl = getFullImageUrl(locationId, imageIndex);
+                thumbnailImg.onerror = () => {
+                    // Check if this is still the current request
+                    if (mainImageLoadRef.current?.thumbnail === thumbnailImg &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex) {
+                        setImageLoadState('error');
+                    }
+                };
+
+                thumbnailImg.src = thumbnailPath;
+
+                // Set full image URL and start loading it in background
+                const fullImageUrl = getFullImageUrl(currentLocationId, currentImageIndex);
                 setFullImageSrc(fullImageUrl);
 
-                // Load full image in background
-                const fullImg = new window.Image();
                 fullImg.onload = () => {
-                    setFullImageLoaded(true);
+                    // Check if this is still the current request
+                    if (mainImageLoadRef.current?.full === fullImg &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex) {
+                        setFullImageLoaded(true);
+                    }
                 };
+
                 fullImg.onerror = () => {
-                    setFullImageLoaded(false);
+                    // Check if this is still the current request
+                    if (mainImageLoadRef.current?.full === fullImg &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex) {
+                        setFullImageLoaded(false);
+                    }
                 };
+
                 fullImg.src = fullImageUrl;
+
             } catch (error) {
                 setImageLoadState('error');
             }
@@ -431,29 +553,52 @@ const Image: React.FC<ImageProps> = ({
                 requestAnimationFrame(checkImageReady);
             } else {
                 // Step 2: Load full image and wait for it to actually load
+                // Cancel any previous expansion image loading
+                if (expansionImageLoadRef.current) {
+                    expansionImageLoadRef.current.onload = null;
+                    expansionImageLoadRef.current.onerror = null;
+                    expansionImageLoadRef.current = null;
+                }
+
                 const img = new window.Image();
+                expansionImageLoadRef.current = img;
+                const currentLocationId = locationId;
+                const currentImageIndex = imageIndex;
+
                 img.onload = () => {
-                    // Show full image underneath
-                    setShowFullImage(true);
-                    setFullImageLoaded(true);
-                    // Wait for the actual DOM image element to be fully loaded and rendered
-                    const checkImageReady = () => {
-                        const fullImageElement = document.querySelector('.image-element.full') as HTMLImageElement;
-                        if (fullImageElement && fullImageElement.complete && fullImageElement.naturalHeight !== 0) {
-                            // Image is fully loaded and rendered, now we can fade out
-                            requestAnimationFrame(() => {
-                                setFadeOutThumbnail(true);
-                            });
-                        } else {
-                            // Check again in next frame
-                            requestAnimationFrame(checkImageReady);
-                        }
-                    };
-                    requestAnimationFrame(checkImageReady);
+                    // Check if this is still the current request
+                    if (expansionImageLoadRef.current === img &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex &&
+                        isExpanded) {
+                        // Show full image underneath
+                        setShowFullImage(true);
+                        setFullImageLoaded(true);
+                        // Wait for the actual DOM image element to be fully loaded and rendered
+                        const checkImageReady = () => {
+                            const fullImageElement = document.querySelector('.image-element.full') as HTMLImageElement;
+                            if (fullImageElement && fullImageElement.complete && fullImageElement.naturalHeight !== 0) {
+                                // Image is fully loaded and rendered, now we can fade out
+                                requestAnimationFrame(() => {
+                                    setFadeOutThumbnail(true);
+                                });
+                            } else {
+                                // Check again in next frame
+                                requestAnimationFrame(checkImageReady);
+                            }
+                        };
+                        requestAnimationFrame(checkImageReady);
+                    }
                 };
                 img.onerror = () => {
-                    setImageLoadState('thumbnail');
-                    setShowFullImage(false);
+                    // Check if this is still the current request
+                    if (expansionImageLoadRef.current === img &&
+                        locationId === currentLocationId &&
+                        imageIndex === currentImageIndex &&
+                        isExpanded) {
+                        setImageLoadState('thumbnail');
+                        setShowFullImage(false);
+                    }
                 };
                 img.src = fullImageSrc;
             }
@@ -517,35 +662,36 @@ const Image: React.FC<ImageProps> = ({
                             />
                         )}
 
-                        {/* Previous thumbnail for crossfade (fading out) */}
-                        {isLocationChanging && previousThumbnailSrc && (
+                        {/* Primary thumbnail image */}
+                        {primaryImageSrc && (
                             <img
-                                src={previousThumbnailSrc}
+                                src={primaryImageSrc}
                                 alt={alt}
-                                className={`image-element ${applyCrossfadeClasses ? 'crossfade-out' : 'crossfade-ready'}`}
+                                className={`image-element primary ${imageLoadState} ${fadeOutThumbnail ? 'fading-out' : ''} ${fastAnimation ? 'fast-animation' : ''} ${activePrimary
+                                    ? (crossfadeState === 'loading' ? 'crossfade-ready' : crossfadeState === 'transitioning' ? 'crossfade-out' : '')
+                                    : transitioningToPrimary
+                                        ? 'crossfade-in'
+                                        : 'crossfade-hidden'
+                                    }`}
                             />
                         )}
 
-                        {/* New thumbnail for crossfade (fading in) */}
-                        {isLocationChanging && newThumbnailSrc && (
+                        {/* Secondary thumbnail image */}
+                        {secondaryImageSrc && (
                             <img
-                                src={newThumbnailSrc}
+                                src={secondaryImageSrc}
                                 alt={alt}
-                                className={`image-element ${applyCrossfadeClasses ? 'crossfade-in' : 'loading-for-crossfade'}`}
-                            />
-                        )}
-
-                        {/* Current thumbnail image (normal state, not during crossfade) */}
-                        {!isLocationChanging && displayThumbnailSrc && (
-                            <img
-                                src={displayThumbnailSrc}
-                                alt={alt}
-                                className={`image-element ${imageLoadState} ${fadeOutThumbnail ? 'fading-out' : ''}`}
+                                className={`image-element secondary ${imageLoadState} ${fadeOutThumbnail ? 'fading-out' : ''} ${fastAnimation ? 'fast-animation' : ''} ${!activePrimary
+                                    ? (crossfadeState === 'loading' ? 'crossfade-ready' : crossfadeState === 'transitioning' ? 'crossfade-out' : '')
+                                    : !transitioningToPrimary
+                                        ? 'crossfade-in'
+                                        : 'crossfade-hidden'
+                                    }`}
                             />
                         )}
 
                         {/* Placeholder when no images available */}
-                        {!displayThumbnailSrc && (
+                        {!primaryImageSrc && !secondaryImageSrc && (
                             <div className={`image-placeholder ${imageLoadState}`}>
                                 {imageLoadState === 'loading' ? (
                                     <span>Loading...</span>
