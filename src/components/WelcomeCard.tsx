@@ -260,8 +260,9 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({ isVisible, onToggle }) => {
                         <div className="welcome-text">
                             <h2>CoruMap</h2>
                             <p>
-                                A Coruña's coast at night is beautiful. I love my city and wanted to share it through an interactive itinerary album
-                            </p>                            <p>
+                                <span className="accent-highlight">A Coruña's coast</span> at night is beautiful. I love my city and wanted to share it through an <span className="accent-highlight">interactive itinerary album</span>
+                            </p>
+                            <p>
                                 I took these photos during an evening walk by the sea. I hope you enjoy them :)
                             </p>
                             <p className="welcome-close-hint">

@@ -10,8 +10,8 @@
     height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * 2 * var(--pixel-ratio, 1) * 0.5vmin);
     position: absolute;
     cursor: pointer;
-    pointer-events: auto;
-    z-index: 10;
+    pointer-events: auto !important;
+    z-index: 10002 !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -23,9 +23,10 @@
 
 /* Visual marker */
 .marker-visual {
-    background-color: #ff0000;
+    background-color: rgba(255, 20, 0, 1);
     outline: calc(var(--marker-outline) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #ffffff;
-    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3) solid #000000;
+    border: calc(var(--marker-border) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3.25) solid #000000;
+    box-shadow: 0vmin 0vmin 2vmin rgba(0, 0, 0, 1), 0vmin 0vmin 2vmin rgba(255, 0, 0, 0.5);
     border-radius: 50%;
     width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
     height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);

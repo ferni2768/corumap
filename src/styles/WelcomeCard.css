@@ -130,9 +130,9 @@
 }
 
 .welcome-component {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5vmin);
+    -webkit-backdrop-filter: blur(5vmin);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     will-change: auto;
@@ -165,40 +165,42 @@
 
 .welcome-text {
     max-width: 100%;
-    color: #333;
+    color: #e2e8f0;
 }
 
 .welcome-text h2 {
-    font-size: calc(var(--welcome-font-size) * 2.5);
+    font-size: calc(var(--welcome-font-size) * 2.75);
     margin: 0 0 4vmin 0;
     font-weight: 800;
-    color: #1a202c;
+    color: #ffffff;
     line-height: 1.1;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 0.8vmin 1.75vmin rgba(0, 0, 0, 0.3);
 }
 
 .welcome-text p {
     font-size: calc(var(--welcome-font-size) * 1.2);
     margin: 0 0 2vmin 0;
     line-height: 1.5;
-    color: #2d3748;
+    color: #d5dee8;
     font-weight: 500;
 }
 
-.welcome-text p:last-of-type {
-    margin-bottom: 0;
+.accent-highlight {
+    color: #64a6f6;
+    font-weight: 700;
+    text-shadow: 0 0.3vmin 0.4vmin rgba(0, 0, 0, 0.5);
 }
 
 .welcome-close-hint {
     font-size: calc(var(--welcome-font-size) * 1) !important;
-    color: #9cadc4 !important;
-    margin: 2vmin 0 0 0 !important;
-    opacity: 0.8;
+    color: #a0aec0 !important;
+    margin: 2.5vmin 0 0 0 !important;
+    opacity: 0.7;
     font-style: italic;
 }
 
 .welcome-link {
-    color: #3182ce;
+    color: #63b3ed;
     text-decoration: underline;
     font-weight: 600;
     font-size: calc(var(--welcome-font-size) * 1.1);
@@ -207,7 +209,7 @@
 }
 
 .welcome-link:hover {
-    color: #2c5aa0;
+    color: #90cdf4;
 }
 
 .welcome-overlay {
@@ -216,7 +218,7 @@
     left: 0;
     width: 100dvw;
     height: 100dvh;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     z-index: 10002;
     cursor: pointer;
     backface-visibility: hidden;

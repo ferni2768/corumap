@@ -16,7 +16,7 @@
 
 .curve-path {
     fill: none;
-    stroke: #ff0000;
+    stroke: rgba(255, 40, 0, 1);
     stroke-width: calc(var(--curve-thickness) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
     stroke-dasharray: calc(var(--curve-dash-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin) calc(var(--curve-gap-length) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3);
     stroke-linecap: round;
@@ -57,7 +57,7 @@
     }
 
     to {
-        opacity: 0.8;
+        opacity: 0.75;
     }
 }
 

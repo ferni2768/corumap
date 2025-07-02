@@ -38,7 +38,7 @@
     -moz-user-drag: none;
     -o-user-drag: none;
     z-index: 10001;
-    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.4)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4));
+    filter: drop-shadow(0 0vmin 0.2vmin rgba(255, 255, 255, 0.6)) drop-shadow(0 1.5vmin 1.1vmin rgba(0, 0, 0, 0.55)) !important;
 }
 
 /* Default landscape positioning */

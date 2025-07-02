@@ -537,14 +537,14 @@ const MapContainer: React.FC = () => {
             {/* UI Overlay - Outside pixelRatio-affected area */}
             <div className="ui-overlay">
                 {/* Gradient overlay for visual separation */}
-                <div className="bottom-gradient-overlay" />
+                <div className={`bottom-gradient-overlay ${showImages ? 'fade-in' : 'fade-out'}`} />
 
                 {/* Loading state */}
                 {loading && (
                     <div className={`loading-wrapper ${loadingFadingOut ? 'fade-out' : ''}`}>
                         <div className="loading-container">
                             <div className="loading-spinner"></div>
-                            <p className="loading-text">Loading A Coruña</p>
+                            <p className="loading-text">Loading CoruMap</p>
                         </div>
                     </div>
                 )}
