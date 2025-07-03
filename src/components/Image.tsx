@@ -357,6 +357,98 @@ const Image: React.FC<ImageProps> = ({
             const root = document.documentElement;
             const propsToRemove = ['--image-initial-x', '--image-initial-y', '--image-initial-width', '--image-initial-height'];
             propsToRemove.forEach(prop => root.style.removeProperty(prop));
+
+            // Check if locationId changed during collapse animation and update accordingly
+            const currentLocationId = locationId || 1;
+            const lastLocationId = lastLocationIdRef.current;
+
+            if (currentLocationId !== lastLocationId &&
+                !src &&
+                (primaryImageSrc || secondaryImageSrc)) {
+
+                // Force update the image to the current locationId
+                const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
+
+                // Clear any existing crossfade state
+                setCrossfadeState('loading');
+                pendingLocationIdRef.current = currentLocationId;
+
+                const img = new window.Image();
+                currentImageLoadRef.current = img;
+
+                img.onload = () => {
+                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                        // Load the new image into the inactive slot
+                        if (activePrimary) {
+                            setSecondaryImageSrc(newThumbnailPath);
+                        } else {
+                            setPrimaryImageSrc(newThumbnailPath);
+                        }
+
+                        // Wait for the new image element to be fully rendered in the DOM
+                        const waitForImageRender = () => {
+                            if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
+                                return;
+                            }
+
+                            const newImageElement = document.querySelector(activePrimary ? '.image-element.secondary' : '.image-element.primary') as HTMLImageElement;
+
+                            if (newImageElement &&
+                                newImageElement.complete &&
+                                newImageElement.naturalHeight !== 0 &&
+                                newImageElement.offsetHeight > 0) {
+
+                                // Image is fully rendered, now we can start crossfade
+                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                    setCrossfadeState('transitioning');
+
+                                    // Complete transition after animation
+                                    crossfadeTimeoutRef.current = setTimeout(() => {
+                                        if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                            // Start transitioning to the new image
+                                            setTransitioningToPrimary(!activePrimary);
+
+                                            // After a brief moment, complete the swap
+                                            setTimeout(() => {
+                                                // Final check before completing transition
+                                                if (pendingLocationIdRef.current === currentLocationId) {
+                                                    setActivePrimary(!activePrimary);
+                                                    setTransitioningToPrimary(false);
+                                                    setCrossfadeState('idle');
+                                                    currentImageLoadRef.current = null;
+                                                    pendingLocationIdRef.current = null;
+                                                    lastLocationIdRef.current = currentLocationId;
+                                                }
+                                            }, fastAnimation ? 100 : 200);
+                                        }
+                                    }, fastAnimation ? 100 : 200);
+                                }
+                            } else {
+                                // Keep checking until image is fully rendered, but only if still current
+                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                    requestAnimationFrame(waitForImageRender);
+                                }
+                            }
+                        };
+
+                        // Start checking after DOM update
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(waitForImageRender);
+                        });
+                    }
+                };
+
+                img.onerror = () => {
+                    // On error, reset state only if this is still the current request
+                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                        setCrossfadeState('idle');
+                        currentImageLoadRef.current = null;
+                        pendingLocationIdRef.current = null;
+                    }
+                };
+
+                img.src = newThumbnailPath;
+            }
         }, 300);
     }, [animationState, clearAnimationTimeout]);
 
@@ -659,6 +751,8 @@ const Image: React.FC<ImageProps> = ({
                                 src={fullImageSrc}
                                 alt={alt}
                                 className="image-element full"
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
                             />
                         )}
 
