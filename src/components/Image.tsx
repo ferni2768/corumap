@@ -96,12 +96,8 @@ const Image: React.FC<ImageProps> = ({
         const currentLocationId = locationId || 1;
         const lastLocationId = lastLocationIdRef.current;
 
-        // Check if locationId actually changed and we can do crossfade
-        if (currentLocationId !== lastLocationId &&
-            animationState === 'idle' &&
-            !isExpanded &&
-            (primaryImageSrc || secondaryImageSrc) &&
-            !src) {
+        // Check if locationId actually changed
+        if (currentLocationId !== lastLocationId && !src) {
 
             // Clear any previous debounce timeout
             if (crossfadeDebounceRef.current) {
@@ -122,32 +118,159 @@ const Image: React.FC<ImageProps> = ({
                 crossfadeTimeoutRef.current = undefined;
             }
 
-            // Debounce rapid locationId changes for crossfade
-            crossfadeDebounceRef.current = setTimeout(() => {
-                // Double-check that this is still the desired locationId
-                if (pendingLocationIdRef.current !== currentLocationId) {
-                    return;
-                }
+            // Set the pending locationId immediately
+            pendingLocationIdRef.current = currentLocationId;
 
-                setCrossfadeState('loading');
-                const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
-                const img = new window.Image();
-                currentImageLoadRef.current = img;
+            // If we can do crossfade (idle state, not expanded, have images), do it
+            if (animationState === 'idle' &&
+                !isExpanded &&
+                (primaryImageSrc || secondaryImageSrc)) {
 
-                img.onload = () => {
-                    // Check if this is still the current request and matches pending locationId
-                    if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
+                // Update ref only when we can actually process the change
+                lastLocationIdRef.current = currentLocationId;
+
+                // Debounce rapid locationId changes for crossfade
+                crossfadeDebounceRef.current = setTimeout(() => {
+                    // Double-check that this is still the desired locationId
+                    if (pendingLocationIdRef.current !== currentLocationId) {
                         return;
                     }
 
-                    // Load the new image into the inactive slot
+                    setCrossfadeState('loading');
+                    const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
+                    const img = new window.Image();
+                    currentImageLoadRef.current = img;
+
+                    img.onload = () => {
+                        // Check if this is still the current request and matches pending locationId
+                        if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
+                            return;
+                        }
+
+                        // Load the new image into the inactive slot
+                        if (activePrimary) {
+                            setSecondaryImageSrc(newThumbnailPath);
+                        } else {
+                            setPrimaryImageSrc(newThumbnailPath);
+                        }
+
+                        // Wait for the new image element to be fully rendered in the DOM
+                        const waitForImageRender = () => {
+                            // Double-check if this is still the current request
+                            if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
+                                return;
+                            }
+
+                            const newImageElement = document.querySelector(activePrimary ? '.image-element.secondary' : '.image-element.primary') as HTMLImageElement;
+
+                            if (newImageElement &&
+                                newImageElement.complete &&
+                                newImageElement.naturalHeight !== 0 &&
+                                newImageElement.offsetHeight > 0) {
+
+                                // Image is fully rendered, now we can start crossfade
+                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                    setCrossfadeState('transitioning');
+
+                                    // Complete transition after animation
+                                    crossfadeTimeoutRef.current = setTimeout(() => {
+                                        if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                            // Start transitioning to the new image
+                                            setTransitioningToPrimary(!activePrimary);
+
+                                            // After a brief moment, complete the swap
+                                            setTimeout(() => {
+                                                // Final check before completing transition
+                                                if (pendingLocationIdRef.current === currentLocationId) {
+                                                    setActivePrimary(!activePrimary);
+                                                    setTransitioningToPrimary(false);
+                                                    setCrossfadeState('idle');
+                                                    currentImageLoadRef.current = null;
+                                                    pendingLocationIdRef.current = null;
+                                                }
+                                            }, fastAnimation ? 100 : 200);
+                                        }
+                                    }, fastAnimation ? 100 : 200);
+                                }
+                            } else {
+                                // Keep checking until image is fully rendered, but only if still current
+                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                                    requestAnimationFrame(waitForImageRender);
+                                }
+                            }
+                        };
+
+                        // Start checking after DOM update
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(waitForImageRender);
+                        });
+                    };
+
+                    img.onerror = () => {
+                        // On error, reset state only if this is still the current request
+                        if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                            setCrossfadeState('idle');
+                            currentImageLoadRef.current = null;
+                            pendingLocationIdRef.current = null;
+                        }
+                    };
+
+                    img.src = newThumbnailPath;
+                }, fastAnimation ? 10 : 50); // Shorter debounce for fast animations
+
+            } else {
+                // If we can't do crossfade immediately, don't update the ref yet
+                // This preserves the old locationId so we can detect the change later
+                // The fallback effect or animation completion will handle the update
+            }
+        }
+    }, [locationId, animationState, isExpanded, primaryImageSrc, secondaryImageSrc, imageIndex, src, activePrimary]);
+
+    // Initialize first image when thumbnailSrc is loaded and slots are empty
+    useEffect(() => {
+        if (crossfadeState === 'idle' && thumbnailSrc && !primaryImageSrc && !secondaryImageSrc) {
+            setPrimaryImageSrc(thumbnailSrc);
+            setActivePrimary(true);
+        }
+    }, [thumbnailSrc, crossfadeState, primaryImageSrc, secondaryImageSrc]);
+
+    // Ensures displayed image always matches current locationId
+    useEffect(() => {
+        // Only validate when in stable state
+        if (animationState !== 'idle' || isExpanded || src || crossfadeState !== 'idle') {
+            return;
+        }
+
+        // Only validate if we have images to display
+        if (!primaryImageSrc && !secondaryImageSrc) {
+            return;
+        }
+
+        const currentLocationId = locationId || 1;
+        const expectedPath = getThumbnailPath(currentLocationId, imageIndex);
+        const currentDisplayedPath = activePrimary ? primaryImageSrc : secondaryImageSrc;
+
+        // If displayed image doesn't match expected, trigger crossfade
+        if (currentDisplayedPath !== expectedPath) {
+            // Update ref to prevent conflicts with main locationId effect
+            lastLocationIdRef.current = currentLocationId;
+
+            setCrossfadeState('loading');
+            pendingLocationIdRef.current = currentLocationId;
+
+            const img = new window.Image();
+            currentImageLoadRef.current = img;
+
+            img.onload = () => {
+                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                    // Load the correct image into the inactive slot
                     if (activePrimary) {
-                        setSecondaryImageSrc(newThumbnailPath);
+                        setSecondaryImageSrc(expectedPath);
                     } else {
-                        setPrimaryImageSrc(newThumbnailPath);
+                        setPrimaryImageSrc(expectedPath);
                     }
 
-                    // Wait for the new image element to be fully rendered in the DOM
+                    // Wait for the new image element to be fully rendered in the DOM (same as main crossfade)
                     const waitForImageRender = () => {
                         // Double-check if this is still the current request
                         if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
@@ -165,7 +288,7 @@ const Image: React.FC<ImageProps> = ({
                             if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
                                 setCrossfadeState('transitioning');
 
-                                // Complete transition after animation
+                                // Complete transition after animation (same timing as main crossfade)
                                 crossfadeTimeoutRef.current = setTimeout(() => {
                                     if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
                                         // Start transitioning to the new image
@@ -197,38 +320,20 @@ const Image: React.FC<ImageProps> = ({
                     requestAnimationFrame(() => {
                         requestAnimationFrame(waitForImageRender);
                     });
-                };
+                }
+            };
 
-                img.onerror = () => {
-                    // On error, reset state only if this is still the current request
-                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                        setCrossfadeState('idle');
-                        currentImageLoadRef.current = null;
-                        pendingLocationIdRef.current = null;
-                    }
-                };
+            img.onerror = () => {
+                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
+                    setCrossfadeState('idle');
+                    currentImageLoadRef.current = null;
+                    pendingLocationIdRef.current = null;
+                }
+            };
 
-                img.src = newThumbnailPath;
-            }, fastAnimation ? 10 : 50); // Shorter debounce for fast animations
-
-            // Set the pending locationId immediately
-            pendingLocationIdRef.current = currentLocationId;
+            img.src = expectedPath;
         }
-
-        // Only update the ref after we've started processing the change
-        // This prevents race conditions with rapid changes
-        if (pendingLocationIdRef.current === null || pendingLocationIdRef.current === currentLocationId) {
-            lastLocationIdRef.current = currentLocationId;
-        }
-    }, [locationId, animationState, isExpanded, primaryImageSrc, secondaryImageSrc, imageIndex, src, activePrimary]);
-
-    // Initialize first image when thumbnailSrc is loaded and slots are empty
-    useEffect(() => {
-        if (crossfadeState === 'idle' && thumbnailSrc && !primaryImageSrc && !secondaryImageSrc) {
-            setPrimaryImageSrc(thumbnailSrc);
-            setActivePrimary(true);
-        }
-    }, [thumbnailSrc, crossfadeState, primaryImageSrc, secondaryImageSrc]);
+    });
 
     const setInitialPosition = useCallback(() => {
         if (!wrapperRef.current) return;
@@ -241,7 +346,9 @@ const Image: React.FC<ImageProps> = ({
         root.style.setProperty('--image-initial-y', `${rect.top}px`);
         root.style.setProperty('--image-initial-width', `${rect.width}px`);
         root.style.setProperty('--image-initial-height', `${rect.height}px`);
-    }, []); const clearAnimationTimeout = useCallback(() => {
+    }, []);
+
+    const clearAnimationTimeout = useCallback(() => {
         if (animationTimeoutRef.current) {
             clearTimeout(animationTimeoutRef.current);
             animationTimeoutRef.current = undefined;
@@ -358,96 +465,13 @@ const Image: React.FC<ImageProps> = ({
             const propsToRemove = ['--image-initial-x', '--image-initial-y', '--image-initial-width', '--image-initial-height'];
             propsToRemove.forEach(prop => root.style.removeProperty(prop));
 
-            // Check if locationId changed during collapse animation and update accordingly
+            // Check if locationId needs updating after collapse completes
             const currentLocationId = locationId || 1;
             const lastLocationId = lastLocationIdRef.current;
 
-            if (currentLocationId !== lastLocationId &&
-                !src &&
-                (primaryImageSrc || secondaryImageSrc)) {
-
-                // Force update the image to the current locationId
-                const newThumbnailPath = getThumbnailPath(currentLocationId, imageIndex);
-
-                // Clear any existing crossfade state
-                setCrossfadeState('loading');
-                pendingLocationIdRef.current = currentLocationId;
-
-                const img = new window.Image();
-                currentImageLoadRef.current = img;
-
-                img.onload = () => {
-                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                        // Load the new image into the inactive slot
-                        if (activePrimary) {
-                            setSecondaryImageSrc(newThumbnailPath);
-                        } else {
-                            setPrimaryImageSrc(newThumbnailPath);
-                        }
-
-                        // Wait for the new image element to be fully rendered in the DOM
-                        const waitForImageRender = () => {
-                            if (currentImageLoadRef.current !== img || pendingLocationIdRef.current !== currentLocationId) {
-                                return;
-                            }
-
-                            const newImageElement = document.querySelector(activePrimary ? '.image-element.secondary' : '.image-element.primary') as HTMLImageElement;
-
-                            if (newImageElement &&
-                                newImageElement.complete &&
-                                newImageElement.naturalHeight !== 0 &&
-                                newImageElement.offsetHeight > 0) {
-
-                                // Image is fully rendered, now we can start crossfade
-                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                                    setCrossfadeState('transitioning');
-
-                                    // Complete transition after animation
-                                    crossfadeTimeoutRef.current = setTimeout(() => {
-                                        if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                                            // Start transitioning to the new image
-                                            setTransitioningToPrimary(!activePrimary);
-
-                                            // After a brief moment, complete the swap
-                                            setTimeout(() => {
-                                                // Final check before completing transition
-                                                if (pendingLocationIdRef.current === currentLocationId) {
-                                                    setActivePrimary(!activePrimary);
-                                                    setTransitioningToPrimary(false);
-                                                    setCrossfadeState('idle');
-                                                    currentImageLoadRef.current = null;
-                                                    pendingLocationIdRef.current = null;
-                                                    lastLocationIdRef.current = currentLocationId;
-                                                }
-                                            }, fastAnimation ? 100 : 200);
-                                        }
-                                    }, fastAnimation ? 100 : 200);
-                                }
-                            } else {
-                                // Keep checking until image is fully rendered, but only if still current
-                                if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                                    requestAnimationFrame(waitForImageRender);
-                                }
-                            }
-                        };
-
-                        // Start checking after DOM update
-                        requestAnimationFrame(() => {
-                            requestAnimationFrame(waitForImageRender);
-                        });
-                    }
-                };
-
-                img.onerror = () => {
-                    // On error, reset state only if this is still the current request
-                    if (currentImageLoadRef.current === img && pendingLocationIdRef.current === currentLocationId) {
-                        setCrossfadeState('idle');
-                        currentImageLoadRef.current = null;
-                        pendingLocationIdRef.current = null;
-                    }
-                };
-
-                img.src = newThumbnailPath;
+            if (currentLocationId !== lastLocationId && !src) {
+                // Now update the ref to trigger the fallback effect
+                lastLocationIdRef.current = currentLocationId;
             }
         }, 300);
     }, [animationState, clearAnimationTimeout]);
