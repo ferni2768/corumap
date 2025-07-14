@@ -15,6 +15,7 @@ interface AnimatedPathProps {
     onAnimationComplete?: () => void;
     onCurrentMarkerChange?: (markerId: number, markerName: string) => void;
     isMapMoving?: boolean;
+    welcomingAnimationComplete?: boolean;
 }
 
 interface CurvePoint {
@@ -35,7 +36,7 @@ const CURVE_CONTROL_POINTS = [
     { cp1: { x: 0.2, y: 0.3 }, cp2: { x: 0.6, y: -0.5 } }                               // 9->10
 ];
 
-const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange, isMapMoving }) => {
+const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerId, onAnimationComplete, onCurrentMarkerChange, isMapMoving, welcomingAnimationComplete }) => {
     const [position, setPosition] = useState<CurvePoint>({ x: 0, y: 0 });
     const [isVisible, setIsVisible] = useState(false);
     const [currentMarkerId, setCurrentMarkerId] = useState<number>(1); // Start at first marker
@@ -254,12 +255,12 @@ const AnimatedPath: React.FC<AnimatedPathProps> = ({ map, markers, targetMarkerI
         reportCurrentMarker(firstMarker.id);
     }, [map, markers]);
 
-    // Handle target marker changes
     useEffect(() => {
-        if (targetMarkerId !== null && targetMarkerId !== currentExactPositionRef.current) {
+        // Only allow position changes after welcome animation is complete
+        if (welcomingAnimationComplete && targetMarkerId !== null && targetMarkerId !== currentExactPositionRef.current) {
             startAnimation(targetMarkerId);
         }
-    }, [targetMarkerId]);
+    }, [targetMarkerId, welcomingAnimationComplete]);
 
     // Handle map events
     useEffect(() => {

@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { PixelRatioManager } from '../utils/pixelRatio';
+import { MapStyleInfo, MAP_STYLES, hideAllLabelsForever } from '../utils/mapStyleUtils';
 import Marker from './Marker';
 import Curve from './Curve';
 import AnimatedPath from './AnimatedPath';
 import RoundedCard from './RoundedCard';
 import Image from './Image';
+import WelcomeCard from './WelcomeCard';
+import InfoButton from './InfoButton';
+import Logo from './Logo';
 import '../styles/MapContainer.css';
 
 // Mapbox access token
@@ -51,12 +55,12 @@ const MARKERS = [
     },
     {
         id: 7,
-        name: "7. Rosa dos Ventos",
+        name: "7. Tower of Hercules",
         coordinates: [-8.407725, 43.386702] as [number, number]
     },
     {
         id: 8,
-        name: "8. Tower of Hercules viewpoint",
+        name: "8. Caracola",
         coordinates: [-8.399772, 43.388004] as [number, number]
     },
     {
@@ -78,16 +82,42 @@ const MapContainer: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
     const [targetMarkerId, setTargetMarkerId] = useState<number | null>(null);
-    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench'); const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0); // Track current marker index
+    const [currentMarkerLocation, setCurrentMarkerLocation] = useState<string>('1. Millenium Bench');
+    const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(0);
+    const [currentMarkerId, setCurrentMarkerId] = useState<number>(1);
     const [fastAnimation, setFastAnimation] = useState<boolean>(false);
     const [animationDirection, setAnimationDirection] = useState<'forward' | 'backward'>('forward');
     const [hasExpandedImage, setHasExpandedImage] = useState(false);
     const [showRoundedCard, setShowRoundedCard] = useState(false);
     const [showImages, setShowImages] = useState(false);
     const [showMarkers, setShowMarkers] = useState(false);
-    const [showCurve, setShowCurve] = useState(false); const [showAnimatedPath, setShowAnimatedPath] = useState(false); const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
+    const [showCurve, setShowCurve] = useState(false);
+    const [showAnimatedPath, setShowAnimatedPath] = useState(false);
+    const [welcomingAnimationComplete, setWelcomingAnimationComplete] = useState(false);
     const [markerAnimationTrigger, setMarkerAnimationTrigger] = useState<{ markerId: number; timestamp: number } | null>(null);
     const [isMapMoving, setIsMapMoving] = useState(false);
+    const [showWelcomeCard, setShowWelcomeCard] = useState(false);
+    const [welcomeCardVisible, setWelcomeCardVisible] = useState(false);
+    const [mapStyle, setMapStyle] = useState(() => {
+        // Load saved style index from localStorage, default to 0 if not found
+        const savedStyleIndex = localStorage.getItem('corumap-logoStyleIndex');
+        if (savedStyleIndex !== null) {
+            const index = parseInt(savedStyleIndex, 10);
+            if (index >= 0 && index < MAP_STYLES.length) {
+                return MAP_STYLES[index].url;
+            }
+        }
+        // Default to first style (Satellite)
+        return MAP_STYLES[0].url;
+    });
+
+    const hasSeenWelcome = () => {
+        return localStorage.getItem('corumap-hasSeenWelcome') === 'true';
+    };
+
+    const markWelcomeAsSeen = () => {
+        localStorage.setItem('corumap-hasSeenWelcome', 'true');
+    };
 
     // Generate organic random delays for images
     const [organicImageDelays] = useState(() => {
@@ -228,7 +258,7 @@ const MapContainer: React.FC = () => {
 
                 map.current = new mapboxgl.Map({
                     container: mapContainer.current!,
-                    style: 'mapbox://styles/mapbox/satellite-v9',
+                    style: mapStyle,
                     center: center,
                     zoom: zoom,
                     interactive: false,
@@ -237,14 +267,15 @@ const MapContainer: React.FC = () => {
                     preserveDrawingBuffer: true
                 });
 
+                // Apply permanent label hiding immediately after map creation
+                hideAllLabelsForever(map.current);
+
                 let isLoaded = false; const onLoad = () => {
                     if (isLoaded || !map.current) return;
                     isLoaded = true;
 
                     // Start fade out transition for loading screen
                     setLoadingFadingOut(true);
-
-                    // Complete loading transition after fade animation
                     setTimeout(() => {
                         setLoading(false);
                     }, 800);
@@ -273,17 +304,20 @@ const MapContainer: React.FC = () => {
                 };
 
                 const startWelcomingAnimation = () => {
+                    setShowWelcomeCard(true);
                     setTimeout(() => setShowMarkers(true), 200);
                     setTimeout(() => setShowCurve(true), 1000);
-                    setTimeout(() => setShowAnimatedPath(true), 2100);
-                    setTimeout(() => setShowImages(true), 1300);
-                    setTimeout(() => setShowRoundedCard(true), 1600);
-                    setTimeout(() => setWelcomingAnimationComplete(true), 2950);
+                    setTimeout(() => setShowAnimatedPath(true), 1750);
+                    setTimeout(() => setShowImages(true), 800);
+                    setTimeout(() => setShowRoundedCard(true), 1200); setTimeout(() => setWelcomingAnimationComplete(true), 2550);
+
+                    if (!hasSeenWelcome()) {
+                        setTimeout(() => setWelcomeCardVisible(true), 3000);
+                    }
                 };
 
                 map.current.on('load', onLoad);
-                map.current.on('idle', () => !isLoaded && onLoad());
-                map.current.on('error', (e) => {
+                map.current.on('idle', () => !isLoaded && onLoad()); map.current.on('error', (e) => {
                     setError(`Map error: ${e.error?.message || 'Unknown error'}`);
                     setLoading(false);
                     // Reload page after 2 seconds when there's an explicit error
@@ -353,6 +387,8 @@ const MapContainer: React.FC = () => {
     }, [isMobile]);
 
     const handleMarkerClick = (markerId: number) => {
+        if (!welcomingAnimationComplete) return; // Don't allow marker clicks during welcome animation
+
         // Calculate direction based on current vs target marker
         const targetIndex = MARKERS.findIndex(marker => marker.id === markerId);
         if (targetIndex !== -1) {
@@ -377,6 +413,7 @@ const MapContainer: React.FC = () => {
 
     const handleCurrentMarkerChange = (_markerId: number, markerName: string) => {
         setCurrentMarkerLocation(markerName);
+        setCurrentMarkerId(_markerId);
         // Update the current marker index based on the marker ID
         const markerIndex = MARKERS.findIndex(marker => marker.id === _markerId);
         if (markerIndex !== -1) {
@@ -385,6 +422,7 @@ const MapContainer: React.FC = () => {
     };
 
     const handlePreviousMarker = () => {
+        if (!welcomingAnimationComplete) return; // Don't allow navigation during welcome animation
         if (currentMarkerIndex > 0) {
             setAnimationDirection('backward');
             const previousMarkerId = MARKERS[currentMarkerIndex - 1].id;
@@ -396,6 +434,7 @@ const MapContainer: React.FC = () => {
     };
 
     const handleNextMarker = () => {
+        if (!welcomingAnimationComplete) return; // Don't allow navigation during welcome animation
         if (currentMarkerIndex < MARKERS.length - 1) {
             setAnimationDirection('forward');
             const nextMarkerId = MARKERS[currentMarkerIndex + 1].id;
@@ -406,16 +445,22 @@ const MapContainer: React.FC = () => {
         }
     };
 
-    const canGoPrevious = currentMarkerIndex > 0;
-    const canGoNext = currentMarkerIndex < MARKERS.length - 1;
+    const canGoPrevious = welcomingAnimationComplete && currentMarkerIndex > 0;
+    const canGoNext = welcomingAnimationComplete && currentMarkerIndex < MARKERS.length - 1;
 
-    // Handle keyboard navigation
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent) => {
             if (document.activeElement?.tagName === 'INPUT' ||
                 document.activeElement?.tagName === 'TEXTAREA') {
                 return;
-            } switch (event.key) {
+            }
+
+            // Don't handle arrow keys when an image is expanded
+            if (document.body.classList.contains('image-expanded')) {
+                return;
+            }
+
+            switch (event.key) {
                 case 'ArrowLeft':
                     event.preventDefault();
                     if (currentMarkerIndex > 0) {
@@ -437,90 +482,149 @@ const MapContainer: React.FC = () => {
         return () => {
             window.removeEventListener('keydown', handleKeyPress);
         };
-    }, [currentMarkerIndex]);
+    }, [currentMarkerIndex, welcomingAnimationComplete]);
 
-    return (<>
-        <div className="map-wrapper">
-            <div ref={mapContainer} className="map-container" />
-            <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
-                <Curve map={map.current} markers={MARKERS} />
-            </div>
-            <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
-                <Marker map={map.current} markers={MARKERS} onMarkerClick={handleMarkerClick} triggerAnimation={markerAnimationTrigger} isMapMoving={isMapMoving} />
-            </div>
+    const handleInfoButtonClick = () => {
+        setWelcomeCardVisible(!welcomeCardVisible);
+    };
 
-            <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
-                <AnimatedPath
-                    map={map.current}
-                    markers={MARKERS}
-                    targetMarkerId={targetMarkerId}
-                    onAnimationComplete={handleAnimationComplete}
-                    onCurrentMarkerChange={handleCurrentMarkerChange}
-                    isMapMoving={isMapMoving}
-                />
-            </div>
-        </div>
+    const handleWelcomeCardToggle = () => {
+        setWelcomeCardVisible(false);
+        markWelcomeAsSeen();
+    };
 
-        {/* UI Overlay - Outside pixelRatio-affected area */}
-        <div className="ui-overlay">
-            {/* Loading state */}
-            {loading && (
-                <div className={`loading-wrapper ${loadingFadingOut ? 'fade-out' : ''}`}>
-                    <div className="loading-container">
-                        <div className="loading-spinner"></div>
-                        <p className="loading-text">Loading A Coruña</p>
-                    </div>
+    const handleMapStyleChange = (styleInfo: MapStyleInfo) => {
+        if (map.current) {
+            setMapStyle(styleInfo.url);
+            map.current.setStyle(styleInfo.url);
+            // Apply permanent label hiding for ALL styles
+            hideAllLabelsForever(map.current);
+        }
+    };
+
+    return (
+        <>
+            <div className="map-wrapper">
+                <div ref={mapContainer} className="map-container" />
+                <div className={`curve-wrapper ${showCurve ? 'fade-in' : 'fade-out'}`}>
+                    <Curve map={map.current} markers={MARKERS} />
                 </div>
-            )}
-
-            {/* Error state */}
-            {error && (
-                <div className="error-wrapper">
-                    <div className="error-container">
-                        <h2 className="error-title">Map Error</h2>
-                        <p className="error-description">{error}</p>
-                        <p className="error-help">Please check your internet connection and Mapbox token.</p>
-                    </div>
+                <div className={`marker-wrapper ${showMarkers ? 'scale-in' : 'scale-out'}`}>
+                    <Marker
+                        map={map.current}
+                        markers={MARKERS}
+                        onMarkerClick={handleMarkerClick}
+                        triggerAnimation={markerAnimationTrigger}
+                        isMapMoving={isMapMoving}
+                        currentMarkerId={currentMarkerId}
+                        showMarkers={showMarkers}
+                    />
                 </div>
-            )}
 
-            {/* Only show other UI elements when not in error state */}
-            {!error && (
-                <>
-                    <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
-                        <Image
-                            className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                            alt="Image 1"
-                            style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
-                        />
-                        <Image
-                            className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                            alt="Image 2"
-                            style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
-                        />
-                        <Image
-                            className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
-                            alt="Image 3"
-                            style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
-                        />
-                    </div>
+                <div className={`animated-path-wrapper ${showAnimatedPath ? 'fade-in' : 'fade-out'}`}>
+                    <AnimatedPath
+                        map={map.current}
+                        markers={MARKERS}
+                        targetMarkerId={targetMarkerId}
+                        onAnimationComplete={handleAnimationComplete}
+                        onCurrentMarkerChange={handleCurrentMarkerChange}
+                        isMapMoving={isMapMoving}
+                        welcomingAnimationComplete={welcomingAnimationComplete}
+                    />
+                </div>
+            </div>
 
-                    <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'} ${welcomingAnimationComplete ? 'welcome-animation-complete' : ''}`}>
-                        <RoundedCard
-                            showDebugOverlay={false}
-                            markerLocationText={currentMarkerLocation}
-                            onPreviousMarker={handlePreviousMarker}
-                            onNextMarker={handleNextMarker}
-                            canGoPrevious={canGoPrevious}
-                            canGoNext={canGoNext}
-                            fastAnimation={fastAnimation}
-                            externalAnimationDirection={animationDirection}
-                        />
+            {/* UI Overlay - Outside pixelRatio-affected area */}
+            <div className="ui-overlay">
+                {/* Gradient overlay for visual separation */}
+                <div className={`bottom-gradient-overlay ${showImages ? 'fade-in' : 'fade-out'}`} />
+
+                {/* Loading state */}
+                {loading && (
+                    <div className={`loading-wrapper ${loadingFadingOut ? 'fade-out' : ''}`}>
+                        <div className="loading-container">
+                            <div className="loading-spinner"></div>
+                            <p className="loading-text">Loading CoruMap</p>
+                        </div>
                     </div>
-                </>
-            )}
-        </div>
-    </>
+                )}
+
+                {/* Error state */}
+                {error && (
+                    <div className="error-wrapper">
+                        <div className="error-container">
+                            <h2 className="error-title">Map Error</h2>
+                            <p className="error-description">{error}</p>
+                            <p className="error-help">Please check your internet connection and Mapbox token.</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Only show other UI elements when not in error state */}
+                {!error && (
+                    <>
+                        <div className={`images-wrapper ${showImages ? 'fade-in' : 'fade-out'}`}>
+                            <Image
+                                className={`image-1 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 1"
+                                locationName={currentMarkerLocation}
+                                locationId={currentMarkerId}
+                                imageIndex={1}
+                                fastAnimation={fastAnimation}
+                                style={{ '--organic-image-delay': `${organicImageDelays[0]}ms` } as React.CSSProperties}
+                            />
+                            <Image
+                                className={`image-2 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 2"
+                                locationName={currentMarkerLocation}
+                                locationId={currentMarkerId}
+                                imageIndex={2}
+                                fastAnimation={fastAnimation}
+                                style={{ '--organic-image-delay': `${organicImageDelays[1]}ms` } as React.CSSProperties}
+                            />
+                            <Image
+                                className={`image-3 ${hasExpandedImage ? 'has-expanded-image' : ''}`}
+                                alt="Image 3"
+                                locationName={currentMarkerLocation}
+                                locationId={currentMarkerId}
+                                imageIndex={3}
+                                fastAnimation={fastAnimation}
+                                style={{ '--organic-image-delay': `${organicImageDelays[2]}ms` } as React.CSSProperties}
+                            />
+                        </div>
+
+                        <div className={`rounded-card-wrapper ${showRoundedCard ? 'slide-up' : 'slide-down'} ${welcomingAnimationComplete ? 'welcome-animation-complete' : ''}`}>
+                            <RoundedCard
+                                markerLocationText={currentMarkerLocation}
+                                onPreviousMarker={handlePreviousMarker}
+                                onNextMarker={handleNextMarker}
+                                canGoPrevious={canGoPrevious}
+                                canGoNext={canGoNext}
+                                fastAnimation={fastAnimation}
+                                externalAnimationDirection={animationDirection} />
+                        </div>
+                    </>
+                )}
+
+                {/* Info Button */}
+                {showWelcomeCard && (
+                    <InfoButton onClick={handleInfoButtonClick} />
+                )}
+
+                {/* Logo */}
+                {showWelcomeCard && (
+                    <Logo onStyleChange={handleMapStyleChange} />
+                )}
+
+                {/* Welcome Card */}
+                {showWelcomeCard && (
+                    <WelcomeCard
+                        isVisible={welcomeCardVisible}
+                        onToggle={handleWelcomeCardToggle}
+                    />
+                )}
+            </div>
+        </>
     );
 };
 

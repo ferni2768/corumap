@@ -1,0 +1,82 @@
+.mini-logo {
+    position: absolute;
+    pointer-events: none;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3 * var(--mini-logo-size, 1));
+    height: calc(var(--marker-size) * var(--marker-mobile-scale, 1) * var(--pixel-ratio, 1) * 1vmin/3 * var(--mini-logo-size, 1));
+    opacity: 0;
+    transition: opacity 1s ease;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Show at default opacity after welcome animation completes */
+.mini-logo.welcome-complete {
+    opacity: 0.3;
+}
+
+/* Active state when yellow marker is at this location */
+.mini-logo.active {
+    opacity: 0.9;
+    /* Ensure transform stays consistent - no scale changes after welcome */
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Map moving state */
+.mini-logo.map-moving {
+    transition: none !important;
+}
+
+/* Welcome animation state */
+.mini-logo.welcome-in {
+    animation: miniLogoWelcome 0.6s cubic-bezier(0.08, 0.82, 0.17, 1) both;
+    animation-delay: var(--organic-delay, 0s);
+}
+
+/* Welcome animation */
+@keyframes miniLogoWelcome {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    45% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Active state overrides welcome animation final opacity */
+.mini-logo.welcome-in.active {
+    animation: miniLogoWelcomeActive 0.6s cubic-bezier(0.08, 0.82, 0.17, 1) both;
+    animation-delay: var(--organic-delay, 0s);
+}
+
+@keyframes miniLogoWelcomeActive {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    45% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.mini-logo-svg {
+    display: block;
+    filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+}

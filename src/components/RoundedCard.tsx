@@ -5,7 +5,6 @@ import '../styles/RoundedCard.css';
 
 interface RoundedCardProps {
     className?: string;
-    showDebugOverlay?: boolean;
     markerLocationText?: string;
     onPreviousMarker?: () => void;
     onNextMarker?: () => void;
@@ -17,7 +16,6 @@ interface RoundedCardProps {
 
 const RoundedCard: React.FC<RoundedCardProps> = ({
     className = '',
-    showDebugOverlay = false,
     markerLocationText = 'No location selected',
     onPreviousMarker,
     onNextMarker,
@@ -26,7 +24,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     fastAnimation = false,
     externalAnimationDirection
 }) => {
-    const [debugVisible, setDebugVisible] = useState(showDebugOverlay);
     const [isAnimating, setIsAnimating] = useState(false);
     const [currentText, setCurrentText] = useState(markerLocationText);
     const [nextText, setNextText] = useState(markerLocationText);
@@ -37,18 +34,6 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     const pendingDirectionRef = useRef<'forward' | 'backward'>('forward');
     const animationQueueRef = useRef<Array<{ text: string; direction: 'forward' | 'backward' }>>([]);
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-        const handleKeyPress = (event: KeyboardEvent) => {
-            if (event.key === 'd' && event.ctrlKey) {
-                event.preventDefault();
-                setDebugVisible(prev => !prev);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, []);
 
     // Process animation queue
     const processQueue = () => {
@@ -62,9 +47,12 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
 
         if (nextAnimation.direction === 'backward') {
             setIsPositioned(false);
+            // Use double requestAnimationFrame to ensure proper positioning
             requestAnimationFrame(() => {
-                setIsPositioned(true);
-                setIsAnimating(true);
+                requestAnimationFrame(() => {
+                    setIsPositioned(true);
+                    setIsAnimating(true);
+                });
             });
         } else {
             setIsAnimating(true);
@@ -105,7 +93,11 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
         setCurrentText(nextText);
         setPrimaryIsActive(!primaryIsActive);
         setIsAnimating(false);
-        setIsPositioned(true);
+
+        // Ensure isPositioned is always true after animation completes
+        if (!isPositioned) {
+            setIsPositioned(true);
+        }
 
         // Clear any pending timeout and process next in queue
         if (animationTimeoutRef.current) {
@@ -143,7 +135,7 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
     }, []);
 
     return (
-        <div className={`rounded-card-container ${debugVisible ? 'debug' : ''}`}>
+        <div className="rounded-card-container">
             <Superellipse
                 className={`rounded-card ${className}`}
                 r1={Preset.iOS.r1}
@@ -159,14 +151,16 @@ const RoundedCard: React.FC<RoundedCardProps> = ({
             <div className="card-content">
                 <div
                     className={`card-text-primary ${isAnimating ? `animate-${animationDirection}` : ''} ${primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && !primaryIsActive ? 'backward-start' : ''}`}
-                    data-positioned={isPositioned}
+                    data-positioned={isPositioned.toString()}
+                    data-animation-direction={animationDirection}
                     onTransitionEnd={primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {primaryIsActive ? currentText : nextText}
                 </div>
                 <div
                     className={`card-text-secondary ${isAnimating ? `animate-${animationDirection}` : ''} ${!primaryIsActive ? 'active' : 'inactive'} ${fastAnimation ? 'fast-animation' : ''} ${!isPositioned && animationDirection === 'backward' && primaryIsActive ? 'backward-start' : ''}`}
-                    data-positioned={isPositioned}
+                    data-positioned={isPositioned.toString()}
+                    data-animation-direction={animationDirection}
                     onTransitionEnd={!primaryIsActive && isAnimating ? handleAnimationEnd : undefined}
                 >
                     {!primaryIsActive ? currentText : nextText}

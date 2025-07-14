@@ -33,6 +33,55 @@
   user-select: none;
 }
 
+/* Additional prevention for images and draggable elements */
+img,
+picture,
+canvas,
+svg,
+video {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  pointer-events: none;
+}
+
+/* Re-enable pointer events for interactive elements */
+button,
+input,
+select,
+textarea,
+a,
+[role="button"],
+[tabindex] {
+  pointer-events: auto;
+}
+
+/* Specific rule to prevent text selection in the entire app */
+html,
+body,
+#root,
+#root * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Prevent blue selection outline in Windows Chrome */
+*::-moz-selection {
+  background: transparent;
+}
+
+*::selection {
+  background: transparent;
+}
+
+/* Additional prevention for focus outlines on non-interactive elements */
+*:not(button):not(input):not(select):not(textarea):not(a):not([tabindex]):focus {
+  outline: none;
+}
+
 a {
   font-weight: 700;
   color: #646cff;

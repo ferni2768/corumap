@@ -1,0 +1,259 @@
+:root {
+    --welcome-padding: 4vmin;
+    --welcome-font-size: 2.5vmin;
+    --welcome-expanded-width: 70vmin;
+    --welcome-expanded-height: 70vmin;
+    --welcome-max-width: 75dvw;
+    --welcome-max-height: 85dvh;
+    --welcome-initial-x: 0;
+    --welcome-initial-y: 0;
+    --welcome-initial-width: 0;
+    --welcome-initial-height: 0;
+    --welcome-target-x: 50dvw;
+    --welcome-target-y: 50dvh;
+}
+
+.welcome-wrapper {
+    position: fixed;
+    top: 6vmin;
+    left: calc(100vw - 4vmin - 5vmin);
+    width: 5vmin;
+    height: 5vmin;
+    box-sizing: border-box;
+    margin: 0;
+    cursor: pointer;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35);
+    transform-origin: center center;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    contain: layout style paint;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    z-index: 10001;
+    overflow: hidden;
+}
+
+/* Disable transitions during resize/orientation changes */
+.welcome-wrapper.no-transitions {
+    transition: none !important;
+}
+
+.welcome-wrapper.no-transitions * {
+    transition: none !important;
+}
+
+/* Disable transitions when not animating */
+.welcome-wrapper:not(.expanding):not(.collapsing):not(.expanded):not(.preparing-expand) {
+    transition: none !important;
+}
+
+.welcome-wrapper:not(.expanding):not(.collapsing):not(.expanded):not(.preparing-expand) * {
+    transition: none !important;
+}
+
+/* Expanded state */
+.welcome-wrapper.expanded {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: var(--welcome-expanded-width) !important;
+    height: var(--welcome-expanded-height) !important;
+    max-width: var(--welcome-max-width) !important;
+    max-height: var(--welcome-max-height) !important;
+    transform: translate(-50%, -50%) translateZ(0) !important;
+    z-index: 10003;
+    margin: 0 !important;
+    padding: 0 !important;
+    transition: top 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35), left 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35), width 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35), height 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35), transform 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35), opacity 0.3s cubic-bezier(0.68, -0.35, 0.265, 1.35) !important;
+}
+
+.welcome-wrapper.expanded .welcome-component {
+    opacity: 1;
+}
+
+/* Animation states */
+.welcome-wrapper.preparing-expand {
+    /* Start from the InfoButton's actual position and size */
+    position: fixed !important;
+    top: var(--welcome-initial-top);
+    left: var(--welcome-initial-left);
+    width: var(--welcome-initial-width);
+    height: var(--welcome-initial-height);
+    transform: translateZ(0) scale(1) !important;
+    z-index: 10003 !important;
+    will-change: top, left, width, height;
+    contain: layout;
+}
+
+.welcome-wrapper.preparing-expand .welcome-component {
+    opacity: 0;
+}
+
+.welcome-wrapper.expanding {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: var(--welcome-expanded-width) !important;
+    height: var(--welcome-expanded-height) !important;
+    max-width: var(--welcome-max-width) !important;
+    max-height: var(--welcome-max-height) !important;
+    transform: translate(-50%, -50%) translateZ(0) !important;
+    z-index: 10003 !important;
+    transition: top 0.52s cubic-bezier(0.68, -0.35, 0.265, 1.35), left 0.52s cubic-bezier(0.68, -0.35, 0.265, 1.35), width 0.52s cubic-bezier(0.68, -0.35, 0.265, 1.35), height 0.52s cubic-bezier(0.68, -0.35, 0.265, 1.35), transform 0.52s cubic-bezier(0.68, -0.35, 0.265, 1.35) !important;
+    will-change: top, left, width, height;
+    contain: layout;
+}
+
+.welcome-wrapper.expanding .welcome-component {
+    opacity: 1;
+    transition: opacity 0.2s ease 0.1s;
+}
+
+.welcome-wrapper.collapsing {
+    /* Collapse back to the InfoButton's actual position and size */
+    position: fixed !important;
+    top: 6vmin;
+    left: calc(100vw - 4vmin - 5vmin);
+    width: 5vmin;
+    height: 5vmin;
+    transform: translateZ(0) scale(1) !important;
+    z-index: 10003 !important;
+    transition: top 0.4s cubic-bezier(0.68, -0.35, 0.265, 1.35), left 0.4s cubic-bezier(0.68, -0.35, 0.265, 1.35), width 0.4s cubic-bezier(0.68, -0.35, 0.265, 1.35), height 0.4s cubic-bezier(0.68, -0.35, 0.265, 1.35), transform 0.4s cubic-bezier(0.68, -0.35, 0.265, 1.35) !important;
+    will-change: top, left, width, height;
+    contain: layout;
+}
+
+.welcome-wrapper.collapsing .welcome-component {
+    opacity: 0;
+    transition: opacity 0.075s ease 0.19s;
+}
+
+.welcome-component {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5vmin);
+    -webkit-backdrop-filter: blur(5vmin);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    will-change: auto;
+    backface-visibility: hidden;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.welcome-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--welcome-padding);
+    box-sizing: border-box;
+    text-align: center;
+    will-change: auto;
+    backface-visibility: hidden;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.welcome-text {
+    max-width: 100%;
+    color: #e2e8f0;
+}
+
+.welcome-text h2 {
+    font-size: calc(var(--welcome-font-size) * 2.75);
+    margin: 0 0 4vmin 0;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+    text-shadow: 0 0.8vmin 1.75vmin rgba(0, 0, 0, 0.3);
+}
+
+.welcome-text p {
+    font-size: calc(var(--welcome-font-size) * 1.2);
+    margin: 0 0 2vmin 0;
+    line-height: 1.5;
+    color: #d5dee8;
+    font-weight: 500;
+}
+
+.accent-highlight {
+    color: #64a6f6;
+    font-weight: 700;
+    text-shadow: 0 0.3vmin 0.4vmin rgba(0, 0, 0, 0.5);
+}
+
+.welcome-close-hint {
+    font-size: calc(var(--welcome-font-size) * 1) !important;
+    color: #a0aec0 !important;
+    margin: 2.5vmin 0 0 0 !important;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+.welcome-link {
+    color: #63b3ed;
+    text-decoration: underline;
+    font-weight: 600;
+    font-size: calc(var(--welcome-font-size) * 1.1);
+    margin-top: 6vmin;
+    display: inline-block;
+}
+
+.welcome-link:hover {
+    color: #90cdf4;
+}
+
+.welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100dvw;
+    height: 100dvh;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10002;
+    cursor: pointer;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    animation: welcomeOverlayFadeIn 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+    will-change: opacity;
+}
+
+.welcome-overlay.fade-out {
+    animation: welcomeOverlayFadeOut 0.2s cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+@keyframes welcomeOverlayFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes welcomeOverlayFadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+/* Hide body scrollbar when welcome is expanded */
+body.welcome-expanded {
+    overflow: hidden;
+}

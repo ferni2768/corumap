@@ -22,14 +22,23 @@
     margin: 0;
     cursor: pointer;
     pointer-events: auto;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1), filter 0.3s cubic-bezier(0.2, 0, 0.1, 1);
     transform-origin: center center;
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
     z-index: 10001;
+    filter: drop-shadow(0 0vmin 0.2vmin rgba(255, 255, 255, 0.6)) drop-shadow(0 1.5vmin 1.1vmin rgba(0, 0, 0, 0.55)) !important;
 }
 
 /* Default landscape positioning */
@@ -58,10 +67,8 @@
 }
 
 .image-component {
-    background: rgba(255, 255, 255, 1);
-
-    /* Content styling */
-    padding: var(--image-padding);
+    background: transparent;
+    padding: 0;
     color: #333;
     display: flex;
     align-items: center;
@@ -75,8 +82,8 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     contain: layout style paint;
-    /* Hardware acceleration */
     will-change: transform;
+    overflow: hidden;
 }
 
 /* Force Superellipse to fill container */
@@ -88,24 +95,165 @@
     justify-content: center !important;
 }
 
+.image-component>* {
+    background: transparent !important;
+}
+
+.image-opacity-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
 .image-content {
-    text-align: center;
-    width: 100% !important;
-    height: 100% !important;
+    width: 100%;
+    height: 100%;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: stretch;
+    justify-content: stretch;
     position: relative;
     overflow: hidden;
+    border-radius: inherit;
 }
 
 .image-element {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center 75%;
     border-radius: inherit;
     will-change: auto;
     backface-visibility: hidden;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 1;
+    filter: none;
+    transition: opacity 0.6s ease, filter 0.3s ease;
+    /* Prevent selection and dragging */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    pointer-events: none;
+    /* Force browser cache headers */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+.image-element.loading {
+    opacity: 1;
+    filter: none;
+    transition: all 0.4s ease;
+    z-index: 1;
+}
+
+.image-element.thumbnail {
+    opacity: 1;
+    filter: none;
+    transition: opacity 0.6s ease, filter 0.3s ease;
+    z-index: 2;
+}
+
+.image-element.expanding {
+    opacity: 1;
+    filter: blur(0.5vmin);
+    transition: opacity 0.6s ease, filter 0.3s ease;
+    z-index: 3;
+}
+
+.image-element.full {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: opacity 0.6s ease, filter 0.3s ease;
+    z-index: 2;
+}
+
+.image-element.fading-out {
+    opacity: 0 !important;
+    filter: blur(0.5vmin);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+    z-index: 3;
+}
+
+/* Layer ordering during expansion to ensure proper stacking:
+   1. Bottom layer (z-index: 1): Previous/inactive images  
+   2. Middle layer (z-index: 2): Full resolution image (always opacity 1)
+   3. Top layer (z-index: 3): Fading out thumbnail/expanding image
+*/
+.image-element {
+    /* Default layer for inactive/hidden images */
+    z-index: 1;
+}
+
+.image-element.full {
+    /* Full resolution always in middle layer with full opacity */
+    z-index: 2 !important;
+    opacity: 1 !important;
+    filter: none !important;
+}
+
+.image-element.expanding,
+.image-element.fading-out {
+    /* Transitioning/fading images on top layer */
+    z-index: 3 !important;
+}
+
+/* Higher specificity rule: if element has both full and fading-out classes, full takes priority for opacity and filter */
+.image-element.full.fading-out {
+    opacity: 1 !important;
+    filter: none !important;
+    z-index: 2 !important;
+}
+
+/* Simple crossfade states */
+.image-element.crossfade-out {
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 2 !important;
+}
+
+/* Before crossfade starts - old image visible on top */
+.image-element.crossfade-ready {
+    opacity: 1 !important;
+    transition: none !important;
+    z-index: 2 !important;
+}
+
+.image-element.crossfade-in {
+    opacity: 1 !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 1 !important;
+    filter: none !important;
+}
+
+/* Completely hidden inactive images that stay at 0 opacity */
+.image-element.crossfade-hidden {
+    opacity: 0 !important;
+    transition: none !important;
+    z-index: 1 !important;
+    filter: none !important;
+}
+
+/* Faster crossfade for cached images */
+.image-element.crossfade-in[data-cached="true"] {
+    opacity: 1 !important;
+    transition: none !important;
+}
+
+.image-element.crossfade-out[data-cached="true"] {
+    opacity: 0 !important;
+    transition: opacity 0.1s ease !important;
 }
 
 .image-placeholder {
@@ -114,12 +262,36 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: #fff;
     font-size: var(--image-font-size);
     border-radius: inherit;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     will-change: auto;
     backface-visibility: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.image-placeholder.loading {
+    filter: blur(8px);
+    transition: all 0.4s ease;
+}
+
+.image-placeholder span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+    max-width: 90%;
+    position: relative;
+    z-index: 1;
 }
 
 .image-overlay {
@@ -174,10 +346,11 @@
 .image-wrapper.expanding {
     position: fixed !important;
     z-index: 10003 !important;
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: top, left, width, height;
     contain: layout;
     transform: translateZ(0);
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
 }
 
 /* Base for expanded state with hardware acceleration */
@@ -196,6 +369,7 @@
     transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1) !important;
     will-change: auto;
     contain: layout;
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
 }
 
 /* Collapsing state with hardware acceleration */
@@ -206,6 +380,7 @@
     will-change: top, left, width, height;
     contain: layout;
     transform: translateZ(0);
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.5)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4)) !important;
 }
 
 .image-wrapper.expanded .image-component {
@@ -214,17 +389,76 @@
     will-change: auto;
 }
 
-/* Content for each image */
-.image-wrapper.image-1 .image-placeholder::before {
-    content: "📸 Image 1";
+/* Ensure images display correctly */
+.image-wrapper img:not(.crossfade-out):not(.crossfade-in):not(.fading-out),
+.image-content img:not(.crossfade-out):not(.crossfade-in):not(.fading-out),
+.image-element:not(.crossfade-out):not(.crossfade-in):not(.fading-out) {
+    opacity: 1 !important;
+    background-color: transparent !important;
+    mix-blend-mode: normal !important;
+    backface-visibility: visible !important;
+    transform: none !important;
+    -webkit-transform: none !important;
 }
 
-.image-wrapper.image-2 .image-placeholder::before {
-    content: "🖼️ Image 2";
+/* Allow blur during expansion */
+.image-element.expanding {
+    filter: blur(0.5vmin) !important;
+    -webkit-filter: blur(0.5vmin) !important;
 }
 
-.image-wrapper.image-3 .image-placeholder::before {
-    content: "🎨 Image 3";
+/* Optimized image caching and loading */
+.image-element[data-cached="true"] {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    will-change: auto;
+}
+
+/* Force hardware acceleration for cached images */
+.image-element[data-cached="true"]:not(.loading) {
+    transform: translateZ(0);
+}
+
+/* Optimize for instant display from cache */
+.image-element.from-cache {
+    opacity: 1;
+    transition: none !important;
+}
+
+/* Additional cache optimization for Service Worker */
+.image-element {
+    /* Force browser cache headers */
+    -webkit-transform: translateZ(0);
+    -moz-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    -o-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Priority hints for critical images */
+.image-element.priority-high {
+    content-visibility: visible;
+    contain-intrinsic-size: 300px 200px;
+}
+
+/* Cached image optimizations */
+.image-element[data-cached="true"] {
+    opacity: 1;
+    filter: none;
+    animation: none;
+    transition: opacity 0.1s ease;
+    image-rendering: auto;
+    will-change: auto;
+    backface-visibility: hidden;
+}
+
+/* From-cache class for instant display */
+.image-element.from-cache {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: none !important;
+    animation: none !important;
 }
 
 /* Responsive positioning  */
@@ -235,7 +469,7 @@
     .image-wrapper.image-2,
     .image-wrapper.image-3 {
         top: 25dvh;
-        width: 11dvw;
+        width: 10.5dvw;
         height: 35dvh;
     }
 
@@ -244,11 +478,11 @@
     }
 
     .image-wrapper.image-2 {
-        left: 74.5dvw;
+        left: 74.25dvw;
     }
 
     .image-wrapper.image-3 {
-        left: 86dvw;
+        left: 85.5dvw;
     }
 }
 
@@ -259,7 +493,7 @@
     .image-wrapper.image-2,
     .image-wrapper.image-3 {
         top: 15dvh;
-        width: 11dvw;
+        width: 10.5dvw;
         height: 45dvh;
     }
 
@@ -268,11 +502,11 @@
     }
 
     .image-wrapper.image-2 {
-        left: 74.5dvw;
+        left: 74.25dvw;
     }
 
     .image-wrapper.image-3 {
-        left: 86dvw;
+        left: 85.5dvw;
     }
 }
 
@@ -283,7 +517,7 @@
     .image-wrapper.image-2,
     .image-wrapper.image-3 {
         top: 30dvh;
-        width: 11dvw;
+        width: 10.5dvw;
         height: 30dvh;
     }
 
@@ -292,11 +526,11 @@
     }
 
     .image-wrapper.image-2 {
-        left: 74.5dvw;
+        left: 74.25dvw;
     }
 
     .image-wrapper.image-3 {
-        left: 86dvw;
+        left: 85.5dvw;
     }
 }
 
@@ -372,7 +606,90 @@
     }
 }
 
+/* Ensure superellipse properly clips image content */
+.image-wrapper .image-component,
+.image-wrapper .image-content,
+.image-wrapper .image-element,
+.image-wrapper .image-placeholder {
+    border-radius: inherit;
+    overflow: hidden;
+}
+
 /* Non-expanded images stay below overlay when another image is expanded */
 body.image-expanded .image-wrapper:not(.expanded):not(.expanding):not(.collapsing):not(.preparing-expand) {
     z-index: 10000 !important;
+}
+
+/* Remove conflicting opacity overrides for fade transition */
+.image-wrapper.expanded .image-element.fading-out {
+    opacity: 0 !important;
+}
+
+/* Ensure full image shows below fading thumbnail */
+.image-wrapper.expanded .image-element.full {
+    z-index: 1 !important;
+}
+
+/* Force correct image display - override any conflicting styles */
+.image-element:not(.fading-out):not(.crossfade-out):not(.crossfade-in),
+.image-content img:not(.fading-out):not(.crossfade-out):not(.crossfade-in) {
+    opacity: 1 !important;
+    transform: none !important;
+    mix-blend-mode: normal !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Instant opacity reset for collapsing images - no fade transition */
+.image-wrapper.collapsing .image-element.thumbnail {
+    opacity: 1 !important;
+    filter: none !important;
+    transition: none !important;
+}
+
+/* Allow filter for blur transitions */
+.image-element.expanding {
+    filter: blur(0.5vmin) !important;
+}
+
+/* Smooth transition for drop-shadow opacity */
+.image-wrapper {
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.1, 1), filter 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+}
+
+.image-wrapper.expanding {
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0)) !important;
+}
+
+.image-wrapper.collapsing {
+    filter: drop-shadow(0 0vmin 0.1vmin rgba(255, 255, 255, 0.2)) drop-shadow(0 1.5vmin 1vmin rgba(0, 0, 0, 0.4)) !important;
+}
+
+/* Fast animations for rapid locationId changes */
+.image-element.fast-animation {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.crossfade-out {
+    transition: opacity 0.1s ease !important;
+}
+
+.image-element.fast-animation.crossfade-in {
+    transition: opacity 0.1s ease !important;
+}
+
+.image-element.fast-animation.fading-out {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.thumbnail {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.expanding {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
+}
+
+.image-element.fast-animation.full {
+    transition: opacity 0.15s ease, filter 0.15s ease !important;
 }

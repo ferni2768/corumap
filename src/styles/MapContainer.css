@@ -41,6 +41,50 @@
     image-rendering: crisp-edges;
 }
 
+/* Bottom gradient overlay with black gradient only */
+.bottom-gradient-overlay {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100dvw;
+    height: 70dvh;
+    z-index: 9997;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.2, 0, 0.1, 1);
+    background:
+        linear-gradient(to top,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.8) 4%,
+            rgba(0, 0, 0, 0.37) 25%,
+            rgba(0, 0, 0, 0.05) 35%,
+            rgba(0, 0, 0, 0.0) 40%,
+            transparent 100%);
+}
+
+/* Welcome animation for gradient overlay */
+.bottom-gradient-overlay.fade-in {
+    opacity: 1;
+    pointer-events: none;
+    animation: gradientFadeIn 2s cubic-bezier(0.2, 0, 0.1, 1) forwards;
+}
+
+.bottom-gradient-overlay.fade-out {
+    opacity: 0;
+}
+
+@keyframes gradientFadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .mapboxgl-map {
     width: 100% !important;
     height: 100% !important;
@@ -164,6 +208,11 @@
 }
 
 /* Scale animation states for animated path (yellow marker) */
+.animated-path-wrapper {
+    z-index: 10003 !important;
+    pointer-events: none;
+}
+
 .animated-path-wrapper.fade-out .animated-path-circle {
     transform: translate(-50%, -50%) scale(0) !important;
     animation: none;
@@ -180,6 +229,7 @@
 .animated-path-wrapper.fade-in .animated-path-circle {
     animation-name: bounceScaleWithTranslate;
     z-index: 10003 !important;
+    pointer-events: auto !important;
 }
 
 /* Height animation states for images */
@@ -258,8 +308,21 @@
 }
 
 /* Markers can receive pointer events by giving them higher specificity */
+.marker-wrapper {
+    z-index: 10001 !important;
+    pointer-events: none;
+}
+
 .marker-wrapper.scale-in {
     z-index: 10001 !important;
+    pointer-events: auto;
+}
+
+.marker-wrapper .marker-hitbox {
+    pointer-events: auto !important;
+    z-index: 10002 !important;
+    position: absolute !important;
+    cursor: pointer !important;
 }
 
 .marker-wrapper.scale-in .marker-hitbox {
@@ -415,6 +478,16 @@
 }
 
 @media (min-aspect-ratio: 3/2) {
+    .bottom-gradient-overlay {
+        opacity: 0 !important;
+    }
+
+    .bottom-gradient-overlay.fade-in {
+        opacity: 0 !important;
+    }
+}
+
+@media (min-aspect-ratio: 3/2) {
 
     /* Landscape mode */
     .loading-spinner {
@@ -480,4 +553,17 @@
     .error-help {
         font-size: 1.5vmin;
     }
+}
+
+/* Responsive adjustments for gradient overlay */
+.ui-overlay .info-button {
+    pointer-events: auto !important;
+}
+
+.ui-overlay .welcome-wrapper {
+    pointer-events: auto !important;
+}
+
+.ui-overlay .welcome-overlay {
+    pointer-events: auto !important;
 }

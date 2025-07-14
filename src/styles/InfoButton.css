@@ -1,0 +1,52 @@
+.info-button {
+    position: fixed;
+    top: 6vmin;
+    right: 5vmin;
+    width: 6vmin;
+    height: 6vmin;
+    border-radius: 50%;
+    background: #4CAF50;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+    z-index: 10010;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.info-button:hover {
+    background: #219a52;
+    transform: translateZ(0) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.info-button:active {
+    transform: translateZ(0) scale(0.95);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.info-icon {
+    color: white;
+    font-size: 4.5vmin;
+    font-weight: bold;
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* Hide info button when images are expanded */
+body.image-expanded .info-button {
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10000;
+    transition: opacity 0.2s ease;
+}
